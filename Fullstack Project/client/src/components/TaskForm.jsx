@@ -8,7 +8,7 @@ export default function TaskForm({ initialData, onSubmit, onCancel }) {
     title: initialData?.title || '',
     description: initialData?.description || '',
     dueDate: initialData?.dueDate || '',
-    assigneeId: initialData?.assigneeId || ''
+    assigneeIds: initialData?.assigneeIds || []
   });
   
   const [errors, setErrors] = useState({});
@@ -20,6 +20,16 @@ export default function TaskForm({ initialData, onSubmit, onCancel }) {
     if (errors[name]) {
       setErrors(prev => ({ ...prev, [name]: undefined }));
     }
+  };
+
+  const handleAssigneeToggle = (memberId) => {
+    setFormData(prev => {
+      const isSelected = prev.assigneeIds.includes(memberId);
+      const newAssigneeIds = isSelected 
+        ? prev.assigneeIds.filter(id => id !== memberId)
+        : [...prev.assigneeIds, memberId];
+      return { ...prev, assigneeIds: newAssigneeIds };
+    });
   };
 
   const handleSubmit = (e) => {
@@ -63,16 +73,21 @@ export default function TaskForm({ initialData, onSubmit, onCancel }) {
       </div>
 
       <div>
-        <label htmlFor="assigneeId" className="input-label">Assignee</label>
-        <select 
-          id="assigneeId" name="assigneeId" className="input-field"
-          value={formData.assigneeId} onChange={handleChange}
-        >
-          <option value="">Unassigned</option>
+        <label className="input-label">Assignees</label>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', maxHeight: '150px', overflowY: 'auto', padding: '8px', border: '1px solid var(--color-border)', borderRadius: 'var(--radius-md)' }}>
+          {members.length === 0 && <span style={{ fontSize: '0.875rem', color: 'var(--color-text-muted)' }}>No members available</span>}
           {members.map(m => (
-            <option key={m.id} value={m.id}>{m.name}</option>
+            <label key={m.id} style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', fontSize: '0.875rem' }}>
+              <input 
+                type="checkbox" 
+                checked={formData.assigneeIds.includes(m.id)}
+                onChange={() => handleAssigneeToggle(m.id)}
+                style={{ width: '16px', height: '16px', accentColor: 'var(--color-primary)' }}
+              />
+              {m.name}
+            </label>
           ))}
-        </select>
+        </div>
       </div>
 
       <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '12px', marginTop: '8px' }}>

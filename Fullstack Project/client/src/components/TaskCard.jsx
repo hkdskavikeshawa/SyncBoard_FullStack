@@ -10,7 +10,7 @@ export default function TaskCard({ task }) {
   const [showMenu, setShowMenu] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 
-  const assignee = members.find(m => m.id === task.assigneeId);
+  const assignees = (task.assigneeIds || []).map(id => members.find(m => m.id === id)).filter(Boolean);
   
   const isOverdue = task.dueDate && new Date(task.dueDate) < new Date(new Date().setHours(0,0,0,0));
 
@@ -92,13 +92,29 @@ export default function TaskCard({ task }) {
           }}>
             Status
           </div>
-          <div style={{ 
-            width: '28px', height: '28px', borderRadius: '50%', 
-            backgroundColor: '#E5E7EB', color: '#374151',
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-            fontSize: '0.625rem', fontWeight: 600, border: '1px solid #FFFFFF'
-          }}>
-            {assignee ? assignee.name.split(' ').map(n=>n[0]).join('').toUpperCase() : '??'}
+          <div style={{ display: 'flex', alignItems: 'center' }}>
+            {assignees.length === 0 ? (
+              <div style={{ width: '28px', height: '28px', borderRadius: '50%', backgroundColor: '#E5E7EB', color: '#374151', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.625rem', fontWeight: 600, border: '1px solid #FFFFFF' }}>
+                ??
+              </div>
+            ) : (
+              assignees.slice(0, 3).map((a, i) => (
+                <div key={a.id} style={{ 
+                  width: '28px', height: '28px', borderRadius: '50%', 
+                  backgroundColor: '#E5E7EB', color: '#374151',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  fontSize: '0.625rem', fontWeight: 600, border: '1px solid #FFFFFF',
+                  marginLeft: i > 0 ? '-8px' : '0', zIndex: 10 - i
+                }} title={a.name}>
+                  {a.name.split(' ').map(n=>n[0]).join('').toUpperCase()}
+                </div>
+              ))
+            )}
+            {assignees.length > 3 && (
+              <div style={{ width: '28px', height: '28px', borderRadius: '50%', backgroundColor: '#F3F4F6', color: '#6B7280', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.625rem', fontWeight: 600, border: '1px solid #FFFFFF', marginLeft: '-8px', zIndex: 1 }}>
+                +{assignees.length - 3}
+              </div>
+            )}
           </div>
         </div>
       </div>
