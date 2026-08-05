@@ -1,4 +1,4 @@
-import { seedTasks, columns, members } from '../data/mockData';
+import { seedTasks, columns as seedColumns, boards as seedBoards, members } from '../data/mockData';
 
 const DELAY = 600;
 let FAIL_NEXT = false;
@@ -7,6 +7,8 @@ const sleep = (ms) => new Promise((res) => setTimeout(res, ms));
 const clone = (v) => JSON.parse(JSON.stringify(v));
 
 let db = clone(seedTasks);
+let cols = clone(seedColumns);
+let brds = clone(seedBoards);
 
 export class NotFoundError extends Error {}
 
@@ -20,9 +22,9 @@ async function guard() {
   }
 }
 
-export async function getTasks() {
+export async function getTasks(boardId) {
   await guard();
-  return clone(db);
+  return clone(db.filter(t => t.boardId === boardId));
 }
 
 export async function getTaskById(id) {
@@ -57,9 +59,50 @@ export async function deleteTask(id) {
   return { id };
 }
 
-export async function getColumns() {
+export async function getColumns(boardId) {
   await sleep(100);
-  return clone(columns);
+  return clone(cols.filter(c => c.boardId === boardId));
+}
+
+export async function createColumn(boardId, name) {
+  await sleep(100);
+  const col = {
+    id: crypto.randomUUID(),
+    boardId,
+    name,
+    order: cols.filter(c => c.boardId === boardId).length + 1
+  };
+  cols.push(col);
+  return clone(col);
+}
+
+export async function updateColumn(id, patch) {
+  await sleep(100);
+  const idx = cols.findIndex((c) => c.id === id);
+  if (idx === -1) throw new NotFoundError(`Column ${id} not found`);
+  cols[idx] = { ...cols[idx], ...patch };
+  return clone(cols[idx]);
+}
+
+export async function deleteColumn(id) {
+  await sleep(100);
+  cols = cols.filter(c => c.id !== id);
+}
+
+export async function getBoards() {
+  await sleep(100);
+  return clone(brds);
+}
+
+export async function createBoard(name, ownerId) {
+  await sleep(100);
+  const b = { id: crypto.randomUUID(), name, ownerId };
+  brds.push(b);
+  // Give it default columns
+  ['To Do', 'In Progress', 'Done'].forEach((n, i) => {
+    cols.push({ id: crypto.randomUUID(), boardId: b.id, name: n, order: i + 1 });
+  });
+  return clone(b);
 }
 
 export async function getMembers() {

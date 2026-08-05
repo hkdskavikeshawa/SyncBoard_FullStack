@@ -3,23 +3,36 @@ import * as api from '../api/tasks';
 
 export const TasksContext = createContext(null);
 
-const initialState = { tasks: [], status: 'idle', error: null, members: [], columns: [] };
+const initialState = { 
+  boards: [], activeBoardId: null, 
+  tasks: [], columns: [], members: [], 
+  status: 'idle', error: null 
+};
 
 function tasksReducer(state, action) {
   switch (action.type) {
     case 'LOAD_START':   
       return { ...state, status: 'loading', error: null };
-    case 'LOAD_SUCCESS': 
-      return { ...state, status: 'success', tasks: action.payload.tasks, members: action.payload.members, columns: action.payload.columns };
+    case 'BOARDS_LOADED':
+      return { ...state, boards: action.payload.boards, members: action.payload.members, activeBoardId: action.payload.activeBoardId, status: 'success' };
+    case 'BOARD_DATA_LOADED': 
+      return { ...state, status: 'success', tasks: action.payload.tasks, columns: action.payload.columns };
     case 'LOAD_ERROR':   
       return { ...state, status: 'error', error: action.error };
+    case 'SET_ACTIVE_BOARD':
+      return { ...state, activeBoardId: action.payload };
+    case 'BOARD_ADDED':
+      return { ...state, boards: [...state.boards, action.payload] };
+    case 'COLUMN_ADDED':
+      return { ...state, columns: [...state.columns, action.payload] };
+    case 'COLUMN_UPDATED':
+      return { ...state, columns: state.columns.map(c => c.id === action.payload.id ? action.payload : c) };
+    case 'COLUMN_DELETED':
+      return { ...state, columns: state.columns.filter(c => c.id !== action.id) };
     case 'TASK_ADDED':   
       return { ...state, tasks: [...state.tasks, action.payload] };
     case 'TASK_UPDATED':
-      return { 
-        ...state,
-        tasks: state.tasks.map((t) => (t.id === action.payload.id ? action.payload : t)) 
-      };
+      return { ...state, tasks: state.tasks.map((t) => (t.id === action.payload.id ? action.payload : t)) };
     case 'TASK_DELETED':
       return { ...state, tasks: state.tasks.filter((t) => t.id !== action.id) };
     default:
@@ -30,38 +43,110 @@ function tasksReducer(state, action) {
 export function TasksProvider({ children }) {
   const [state, dispatch] = useReducer(tasksReducer, initialState);
 
-  const load = useCallback(async () => {
+  // Load initial app data (boards & members)
+  const loadInitial = useCallback(async () => {
     dispatch({ type: 'LOAD_START' });
     try {
-      const [tasks, members, columns] = await Promise.all([
-        api.getTasks(),
-        api.getMembers(),
-        api.getColumns()
-      ]);
-      dispatch({ type: 'LOAD_SUCCESS', payload: { tasks, members, columns } });
+      const [boards, members] = await Promise.all([api.getBoards(), api.getMembers()]);
+      dispatch({ 
+        type: 'BOARDS_LOADED', 
+        payload: { boards, members, activeBoardId: boards.length > 0 ? boards[0].id : null } 
+      });
     } catch (err) {
       dispatch({ type: 'LOAD_ERROR', error: err.message });
     }
   }, []);
 
-  useEffect(() => { load(); }, [load]);
+  // Load data for the active board
+  const loadBoardData = useCallback(async (boardId) => {
+    if (!boardId) return;
+    dispatch({ type: 'LOAD_START' });
+    try {
+      const [tasks, columns] = await Promise.all([api.getTasks(boardId), api.getColumns(boardId)]);
+      dispatch({ type: 'BOARD_DATA_LOADED', payload: { tasks, columns } });
+    } catch (err) {
+      dispatch({ type: 'LOAD_ERROR', error: err.message });
+    }
+  }, []);
 
-  const addTask = async (input) =>
-    dispatch({ type: 'TASK_ADDED', payload: await api.createTask(input) });
+  // Initial mount
+  useEffect(() => { loadInitial(); }, [loadInitial]);
 
-  const updateTaskDetails = async (id, patch) =>
+  // When active board changes, load its data
+  useEffect(() => {
+    if (state.activeBoardId) {
+      loadBoardData(state.activeBoardId);
+    }
+  }, [state.activeBoardId, loadBoardData]);
+
+  // BroadcastChannel for Live Collaboration Sync
+  useEffect(() => {
+    const channel = new BroadcastChannel('collab_board_sync');
+    channel.onmessage = (e) => {
+      if (e.data.type === 'SYNC' && e.data.boardId === state.activeBoardId) {
+        // If a change happened in another tab for our current board, reload data
+        loadBoardData(state.activeBoardId);
+      }
+    };
+    return () => channel.close();
+  }, [state.activeBoardId, loadBoardData]);
+
+  const notifySync = () => {
+    const channel = new BroadcastChannel('collab_board_sync');
+    channel.postMessage({ type: 'SYNC', boardId: state.activeBoardId });
+    channel.close();
+  };
+
+  const setActiveBoard = (boardId) => dispatch({ type: 'SET_ACTIVE_BOARD', payload: boardId });
+
+  const addBoard = async (name, ownerId) => {
+    const board = await api.createBoard(name, ownerId);
+    dispatch({ type: 'BOARD_ADDED', payload: board });
+    setActiveBoard(board.id);
+  };
+
+  const addColumn = async (name) => {
+    dispatch({ type: 'COLUMN_ADDED', payload: await api.createColumn(state.activeBoardId, name) });
+    notifySync();
+  };
+
+  const updateColumn = async (id, patch) => {
+    dispatch({ type: 'COLUMN_UPDATED', payload: await api.updateColumn(id, patch) });
+    notifySync();
+  };
+
+  const removeColumn = async (id) => {
+    await api.deleteColumn(id);
+    dispatch({ type: 'COLUMN_DELETED', id });
+    notifySync();
+  };
+
+  const addTask = async (input) => {
+    dispatch({ type: 'TASK_ADDED', payload: await api.createTask({ ...input, boardId: state.activeBoardId }) });
+    notifySync();
+  };
+
+  const updateTaskDetails = async (id, patch) => {
     dispatch({ type: 'TASK_UPDATED', payload: await api.updateTask(id, patch) });
+    notifySync();
+  };
 
-  const moveTask = async (id, columnId) =>
+  const moveTask = async (id, columnId) => {
     dispatch({ type: 'TASK_UPDATED', payload: await api.updateTask(id, { columnId }) });
+    notifySync();
+  };
 
   const removeTask = async (id) => {
     await api.deleteTask(id);
     dispatch({ type: 'TASK_DELETED', id });
+    notifySync();
   };
 
   return (
-    <TasksContext.Provider value={{ ...state, load, addTask, moveTask, removeTask, updateTaskDetails }}>
+    <TasksContext.Provider value={{ 
+      ...state, loadInitial, loadBoardData, setActiveBoard, addBoard, 
+      addColumn, updateColumn, removeColumn, addTask, moveTask, removeTask, updateTaskDetails 
+    }}>
       {children}
     </TasksContext.Provider>
   );
