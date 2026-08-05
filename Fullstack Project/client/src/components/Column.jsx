@@ -3,7 +3,7 @@ import { useTasks } from '../hooks/useTasks';
 import { useState } from 'react';
 
 export default function Column({ column, tasks }) {
-  const { moveTask, updateColumn, removeColumn } = useTasks();
+  const { moveTask, updateColumn, removeColumn, isOwner } = useTasks();
   const [isDragOver, setIsDragOver] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [name, setName] = useState(column.name);
@@ -83,46 +83,48 @@ export default function Column({ column, tasks }) {
             {column.name} ({tasks.length})
           </h3>
         )}
-        <div style={{ position: 'relative' }}>
-          <button 
-            onClick={() => setShowMenu(!showMenu)}
-            style={{ background: 'none', border: 'none', color: '#9CA3AF', cursor: 'pointer', padding: '4px' }}
-          >
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/><circle cx="5" cy="12" r="1"/></svg>
-          </button>
-          
-          {showMenu && (
-            <>
-              <div 
-                style={{ position: 'fixed', inset: 0, zIndex: 10 }} 
-                onClick={() => setShowMenu(false)}
-              />
-              <div style={{ 
-                position: 'absolute', right: 0, top: '100%', 
-                backgroundColor: 'white', border: '1px solid var(--color-border)', 
-                borderRadius: 'var(--radius-md)', padding: '4px', 
-                boxShadow: 'var(--shadow-lg)', zIndex: 20, minWidth: '150px' 
-              }}>
-                <button 
-                  onClick={() => { setIsEditing(true); setShowMenu(false); }}
-                  style={{ width: '100%', textAlign: 'left', padding: '8px 12px', background: 'none', border: 'none', cursor: 'pointer', fontSize: '0.875rem', borderRadius: '4px' }}
-                  onMouseEnter={(e) => e.target.style.backgroundColor = '#F3F4F6'}
-                  onMouseLeave={(e) => e.target.style.backgroundColor = 'transparent'}
-                >
-                  Rename Column
-                </button>
-                <button 
-                  onClick={handleDelete}
-                  style={{ width: '100%', textAlign: 'left', padding: '8px 12px', background: 'none', border: 'none', cursor: 'pointer', fontSize: '0.875rem', borderRadius: '4px', color: '#DC2626' }}
-                  onMouseEnter={(e) => e.target.style.backgroundColor = '#FEE2E2'}
-                  onMouseLeave={(e) => e.target.style.backgroundColor = 'transparent'}
-                >
-                  Delete Column
-                </button>
-              </div>
-            </>
-          )}
-        </div>
+        {isOwner && (
+          <div style={{ position: 'relative' }}>
+            <button 
+              onClick={() => setShowMenu(!showMenu)}
+              style={{ background: 'none', border: 'none', color: '#9CA3AF', cursor: 'pointer', padding: '4px' }}
+            >
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/><circle cx="5" cy="12" r="1"/></svg>
+            </button>
+            
+            {showMenu && (
+              <>
+                <div 
+                  style={{ position: 'fixed', inset: 0, zIndex: 10 }} 
+                  onClick={() => setShowMenu(false)}
+                />
+                <div style={{ 
+                  position: 'absolute', right: 0, top: '100%', 
+                  backgroundColor: 'white', border: '1px solid var(--color-border)', 
+                  borderRadius: 'var(--radius-md)', padding: '4px', 
+                  boxShadow: 'var(--shadow-lg)', zIndex: 20, minWidth: '150px' 
+                }}>
+                  <button 
+                    onClick={() => { setIsEditing(true); setShowMenu(false); }}
+                    style={{ width: '100%', textAlign: 'left', padding: '8px 12px', background: 'none', border: 'none', cursor: 'pointer', fontSize: '0.875rem', borderRadius: '4px' }}
+                    onMouseEnter={(e) => e.target.style.backgroundColor = '#F3F4F6'}
+                    onMouseLeave={(e) => e.target.style.backgroundColor = 'transparent'}
+                  >
+                    Rename Column
+                  </button>
+                  <button 
+                    onClick={handleDelete}
+                    style={{ width: '100%', textAlign: 'left', padding: '8px 12px', background: 'none', border: 'none', cursor: 'pointer', fontSize: '0.875rem', borderRadius: '4px', color: '#DC2626' }}
+                    onMouseEnter={(e) => e.target.style.backgroundColor = '#FEE2E2'}
+                    onMouseLeave={(e) => e.target.style.backgroundColor = 'transparent'}
+                  >
+                    Delete Column
+                  </button>
+                </div>
+              </>
+            )}
+          </div>
+        )}
       </div>
       
       <div style={{ flex: 1, overflowY: 'auto', paddingRight: '4px' }}>

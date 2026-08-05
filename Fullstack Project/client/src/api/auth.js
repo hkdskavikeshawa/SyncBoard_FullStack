@@ -68,3 +68,11 @@ export function getCurrentUser(token) {
     return null;
   }
 }
+
+export async function getUserByEmail(email) {
+  await sleep(100);
+  const users = getUsers();
+  const user = users.find(u => u.email === email);
+  if (!user) throw new Error('User not found');
+  return { id: user.id, name: user.name, email: user.email };
+}

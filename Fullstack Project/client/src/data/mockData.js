@@ -1,6 +1,6 @@
 export const boards = [
-  { id: 'b1', name: 'Frontend Redesign', ownerId: 'u1' },
-  { id: 'b2', name: 'Backend API V2', ownerId: 'u2' }
+  { id: 'b1', name: 'Frontend Redesign', ownerId: 'u1', invitedMembers: [] },
+  { id: 'b2', name: 'Backend API V2', ownerId: 'u2', invitedMembers: ['u1'] }
 ];
 
 export const columns = [

@@ -5,25 +5,40 @@ import Board from '../components/Board';
 import LoadingState from '../components/LoadingState';
 import ErrorState from '../components/ErrorState';
 import EmptyState from '../components/EmptyState';
-import { Plus, Search, Filter, ChevronDown, LogOut } from 'lucide-react';
+import { Plus, Search, Filter, ChevronDown, LogOut, Pencil, Trash2 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { simulateNextFailure } from '../api/tasks';
 import CreateBoardDialog from '../components/CreateBoardDialog';
+import InviteMemberDialog from '../components/InviteMemberDialog';
 import { useAuth } from '../context/AuthContext';
 
 export default function BoardPage() {
-  const { boards, activeBoardId, setActiveBoard, tasks, members, columns, status, error, loadInitial, loadBoardData } = useTasks();
+  const { boards, activeBoardId, setActiveBoard, tasks, members, columns, status, error, loadInitial, loadBoardData, updateBoard, removeBoard, isOwner } = useTasks();
   const { user, logout } = useAuth();
   const [filters, setFilters] = useState({ search: '', assignee: '', status: '' });
   const [showFilters, setShowFilters] = useState(false);
   const [showBoardSelector, setShowBoardSelector] = useState(false);
   const [showCreateBoard, setShowCreateBoard] = useState(false);
+  const [showInviteDialog, setShowInviteDialog] = useState(false);
 
   const activeBoard = boards.find(b => b.id === activeBoardId);
 
   const handleTestError = () => {
     simulateNextFailure();
     loadBoardData(activeBoardId);
+  };
+
+  const handleRenameBoard = () => {
+    const newName = prompt('Enter new board name:', activeBoard.name);
+    if (newName && newName.trim() && newName !== activeBoard.name) {
+      updateBoard(activeBoard.id, { name: newName.trim() });
+    }
+  };
+
+  const handleDeleteBoard = () => {
+    if (confirm(`Are you sure you want to delete the board "${activeBoard.name}"? This will delete all tasks and columns in it.`)) {
+      removeBoard(activeBoard.id);
+    }
   };
 
   if (status === 'loading' || status === 'idle') return <LoadingState />;
@@ -79,6 +94,19 @@ export default function BoardPage() {
             </div>
           )}
         </div>
+        {activeBoard && isOwner && (
+          <div style={{ display: 'flex', gap: '4px', marginLeft: '4px' }}>
+            <button onClick={() => setShowInviteDialog(true)} title="Invite Member" style={{ padding: '6px', background: 'none', border: 'none', cursor: 'pointer', color: 'var(--color-primary)', borderRadius: '4px' }} onMouseEnter={e => e.target.style.backgroundColor = 'var(--color-bg)'} onMouseLeave={e => e.target.style.backgroundColor = 'transparent'}>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ pointerEvents: 'none' }}><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="8.5" cy="7" r="4"></circle><line x1="20" y1="8" x2="20" y2="14"></line><line x1="23" y1="11" x2="17" y2="11"></line></svg>
+            </button>
+            <button onClick={handleRenameBoard} title="Rename Board" style={{ padding: '6px', background: 'none', border: 'none', cursor: 'pointer', color: 'var(--color-text-muted)', borderRadius: '4px' }} onMouseEnter={e => e.target.style.backgroundColor = 'var(--color-border)'} onMouseLeave={e => e.target.style.backgroundColor = 'transparent'}>
+              <Pencil size={14} style={{ pointerEvents: 'none' }} />
+            </button>
+            <button onClick={handleDeleteBoard} title="Delete Board" style={{ padding: '6px', background: 'none', border: 'none', cursor: 'pointer', color: '#DC2626', borderRadius: '4px' }} onMouseEnter={e => e.target.style.backgroundColor = '#FEE2E2'} onMouseLeave={e => e.target.style.backgroundColor = 'transparent'}>
+              <Trash2 size={14} style={{ pointerEvents: 'none' }} />
+            </button>
+          </div>
+        )}
       </div>
       
       <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
@@ -140,9 +168,11 @@ export default function BoardPage() {
             onChange={(e) => setFilters(prev => ({ ...prev, search: e.target.value }))}
           />
         </div>
-        <Link to="/tasks/new" className="btn btn-primary" style={{ textDecoration: 'none', backgroundColor: '#10B981', borderColor: '#10B981' }}>
-          <Plus size={16} /> New Task
-        </Link>
+        {isOwner && (
+          <Link to="/tasks/new" className="btn btn-primary" style={{ textDecoration: 'none', backgroundColor: '#10B981', borderColor: '#10B981' }}>
+            <Plus size={16} /> New Task
+          </Link>
+        )}
         <div style={{ width: '1px', height: '24px', backgroundColor: 'var(--color-border)', margin: '0 8px' }}></div>
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
           <div style={{ width: '32px', height: '32px', borderRadius: '50%', backgroundColor: 'var(--color-primary)', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 600, fontSize: '0.875rem' }}>
@@ -183,6 +213,7 @@ export default function BoardPage() {
       </div>
 
       {showCreateBoard && <CreateBoardDialog onClose={() => setShowCreateBoard(false)} />}
+      {showInviteDialog && <InviteMemberDialog onClose={() => setShowInviteDialog(false)} />}
     </div>
   );
 }

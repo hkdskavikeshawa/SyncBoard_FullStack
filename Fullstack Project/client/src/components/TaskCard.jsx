@@ -5,7 +5,7 @@ import { useState } from 'react';
 import ConfirmDialog from './ConfirmDialog';
 
 export default function TaskCard({ task }) {
-  const { members, columns, moveTask, removeTask } = useTasks();
+  const { members, columns, moveTask, removeTask, isOwner } = useTasks();
   const [isHovered, setIsHovered] = useState(false);
   const [showMenu, setShowMenu] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
@@ -72,12 +72,14 @@ export default function TaskCard({ task }) {
                     {col.name}
                   </button>
                 ))}
-                <div style={{ borderTop: '1px solid var(--color-border)' }}>
-                  <button onClick={() => { setShowMenu(false); setShowDeleteConfirm(true); }} 
-                    style={{ display: 'block', width: '100%', padding: '8px', textAlign: 'left', border: 'none', background: 'none', cursor: 'pointer', color: 'var(--color-danger)', fontSize: '0.875rem' }}>
-                    Delete Task
-                  </button>
-                </div>
+                {isOwner && (
+                  <div style={{ borderTop: '1px solid var(--color-border)' }}>
+                    <button onClick={() => { setShowMenu(false); setShowDeleteConfirm(true); }} 
+                      style={{ display: 'block', width: '100%', padding: '8px', textAlign: 'left', border: 'none', background: 'none', cursor: 'pointer', color: 'var(--color-danger)', fontSize: '0.875rem' }}>
+                      Delete Task
+                    </button>
+                  </div>
+                )}
               </div>
             )}
           </div>

@@ -1,5 +1,6 @@
-import { createContext, useReducer, useEffect, useCallback } from 'react';
+import { createContext, useReducer, useEffect, useCallback, useContext } from 'react';
 import * as api from '../api/tasks';
+import { useAuth } from './AuthContext';
 
 export const TasksContext = createContext(null);
 
@@ -23,6 +24,11 @@ function tasksReducer(state, action) {
       return { ...state, activeBoardId: action.payload };
     case 'BOARD_ADDED':
       return { ...state, boards: [...state.boards, action.payload] };
+    case 'BOARD_UPDATED':
+      return { ...state, boards: state.boards.map(b => b.id === action.payload.id ? action.payload : b) };
+    case 'BOARD_DELETED':
+      const newBoards = state.boards.filter(b => b.id !== action.id);
+      return { ...state, boards: newBoards, activeBoardId: newBoards.length > 0 ? newBoards[0].id : null };
     case 'COLUMN_ADDED':
       return { ...state, columns: [...state.columns, action.payload] };
     case 'COLUMN_UPDATED':
@@ -42,12 +48,14 @@ function tasksReducer(state, action) {
 
 export function TasksProvider({ children }) {
   const [state, dispatch] = useReducer(tasksReducer, initialState);
+  const { user } = useAuth();
 
   // Load initial app data (boards & members)
   const loadInitial = useCallback(async () => {
+    if (!user) return;
     dispatch({ type: 'LOAD_START' });
     try {
-      const [boards, members] = await Promise.all([api.getBoards(), api.getMembers()]);
+      const [boards, members] = await Promise.all([api.getBoards(user.id), api.getMembers()]);
       dispatch({ 
         type: 'BOARDS_LOADED', 
         payload: { boards, members, activeBoardId: boards.length > 0 ? boards[0].id : null } 
@@ -55,7 +63,7 @@ export function TasksProvider({ children }) {
     } catch (err) {
       dispatch({ type: 'LOAD_ERROR', error: err.message });
     }
-  }, []);
+  }, [user]);
 
   // Load data for the active board
   const loadBoardData = useCallback(async (boardId) => {
@@ -105,6 +113,23 @@ export function TasksProvider({ children }) {
     setActiveBoard(board.id);
   };
 
+  const updateBoard = async (id, patch) => {
+    dispatch({ type: 'BOARD_UPDATED', payload: await api.updateBoard(id, patch) });
+    notifySync();
+  };
+
+  const removeBoard = async (id) => {
+    await api.deleteBoard(id);
+    dispatch({ type: 'BOARD_DELETED', id });
+    notifySync();
+  };
+
+  const inviteMember = async (email) => {
+    const updatedBoard = await api.inviteUserByEmail(state.activeBoardId, email);
+    dispatch({ type: 'BOARD_UPDATED', payload: updatedBoard });
+    notifySync();
+  };
+
   const addColumn = async (name) => {
     dispatch({ type: 'COLUMN_ADDED', payload: await api.createColumn(state.activeBoardId, name) });
     notifySync();
@@ -142,9 +167,11 @@ export function TasksProvider({ children }) {
     notifySync();
   };
 
+  const isOwner = state.boards.find(b => b.id === state.activeBoardId)?.ownerId === user?.id;
+
   return (
     <TasksContext.Provider value={{ 
-      ...state, loadInitial, loadBoardData, setActiveBoard, addBoard, 
+      ...state, loadInitial, loadBoardData, setActiveBoard, addBoard, updateBoard, removeBoard, inviteMember, isOwner,
       addColumn, updateColumn, removeColumn, addTask, moveTask, removeTask, updateTaskDetails 
     }}>
       {children}

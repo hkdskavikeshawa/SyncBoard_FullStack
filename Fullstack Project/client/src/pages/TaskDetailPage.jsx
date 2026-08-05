@@ -8,7 +8,7 @@ import NotFoundPage from './NotFoundPage';
 export default function TaskDetailPage() {
   const { id } = useParams();
   const navigate = useNavigate();
-  const { tasks, columns, addTask, updateTaskDetails } = useTasks();
+  const { tasks, columns, addTask, updateTaskDetails, isOwner } = useTasks();
   
   const isNew = id === 'new';
   const [task, setTask] = useState(null);
@@ -17,8 +17,10 @@ export default function TaskDetailPage() {
     if (!isNew) {
       const found = tasks.find(t => t.id === id);
       setTask(found || null);
+    } else if (!isOwner) {
+      navigate('/');
     }
-  }, [id, tasks, isNew]);
+  }, [id, tasks, isNew, isOwner, navigate]);
 
   if (!isNew && !task) {
     return <NotFoundPage />;

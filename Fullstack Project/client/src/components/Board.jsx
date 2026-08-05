@@ -2,7 +2,7 @@ import Column from './Column';
 import { useTasks } from '../hooks/useTasks';
 
 export default function Board({ tasks }) {
-  const { columns, addColumn } = useTasks();
+  const { columns, addColumn, isOwner } = useTasks();
 
   const handleAddColumn = () => {
     const name = prompt('Enter new column name:');
@@ -22,18 +22,20 @@ export default function Board({ tasks }) {
           tasks={tasks.filter(t => t.columnId === column.id)} 
         />
       ))}
-      <button 
-        onClick={handleAddColumn}
-        style={{ 
-          minWidth: '320px', height: 'fit-content', padding: '16px', 
-          backgroundColor: 'transparent', border: '2px dashed var(--color-border)', 
-          borderRadius: 'var(--radius-lg)', color: 'var(--color-text-muted)',
-          cursor: 'pointer', fontSize: '1rem', fontWeight: 600,
-          display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px'
-        }}
-      >
-        + Add Column
-      </button>
+      {isOwner && (
+        <button 
+          onClick={handleAddColumn}
+          style={{ 
+            minWidth: '320px', height: 'fit-content', padding: '16px', 
+            backgroundColor: 'transparent', border: '2px dashed var(--color-border)', 
+            borderRadius: 'var(--radius-lg)', color: 'var(--color-text-muted)',
+            cursor: 'pointer', fontSize: '1rem', fontWeight: 600,
+            display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px'
+          }}
+        >
+          + Add Column
+        </button>
+      )}
     </div>
   );
 }
