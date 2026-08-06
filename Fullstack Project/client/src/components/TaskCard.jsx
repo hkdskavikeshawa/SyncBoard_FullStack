@@ -4,6 +4,15 @@ import { useTasks } from '../hooks/useTasks';
 import { useState } from 'react';
 import ConfirmDialog from './ConfirmDialog';
 
+const getAvatarColor = (name) => {
+  let hash = 0;
+  for (let i = 0; i < name.length; i++) {
+    hash = name.charCodeAt(i) + ((hash << 5) - hash);
+  }
+  const h = Math.abs(hash) % 360;
+  return `hsl(${h}, 65%, 55%)`;
+};
+
 export default function TaskCard({ task }) {
   const { members, columns, moveTask, removeTask, isOwner } = useTasks();
   const [isHovered, setIsHovered] = useState(false);
@@ -123,7 +132,7 @@ export default function TaskCard({ task }) {
               assignees.slice(0, 3).map((a, i) => (
                 <div key={a.id} style={{ 
                   width: '28px', height: '28px', borderRadius: '50%', 
-                  backgroundColor: '#E5E7EB', color: '#374151',
+                  backgroundColor: getAvatarColor(a.name), color: '#FFFFFF',
                   display: 'flex', alignItems: 'center', justifyContent: 'center',
                   fontSize: '0.625rem', fontWeight: 600, border: '1px solid #FFFFFF',
                   marginLeft: i > 0 ? '-8px' : '0', zIndex: 10 - i
