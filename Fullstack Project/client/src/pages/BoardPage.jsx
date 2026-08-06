@@ -16,7 +16,6 @@ export default function BoardPage() {
   const { boards, activeBoardId, setActiveBoard, tasks, members, columns, status, error, loadInitial, loadBoardData, updateBoard, removeBoard, isOwner } = useTasks();
   const { user, logout } = useAuth();
   const [filters, setFilters] = useState({ search: '', assignee: '', status: '' });
-  const [showFilters, setShowFilters] = useState(false);
   const [showBoardSelector, setShowBoardSelector] = useState(false);
   const [showCreateBoard, setShowCreateBoard] = useState(false);
   const [showInviteDialog, setShowInviteDialog] = useState(false);
@@ -47,7 +46,7 @@ export default function BoardPage() {
   const visibleTasks = applyFilters(tasks, filters);
   
   const header = (
-    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px', paddingBottom: '16px', borderBottom: '1px solid var(--color-border)' }}>
+    <div className="glass-panel" style={{ position: 'relative', zIndex: 10, display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px', padding: '16px 24px', borderRadius: 'var(--radius-lg)' }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
         <h1 style={{ fontSize: '1.5rem', fontWeight: 700, margin: 0 }}>
           CodeForge
@@ -113,49 +112,29 @@ export default function BoardPage() {
         <button onClick={handleTestError} className="btn btn-outline" style={{ padding: '8px 12px', color: 'var(--color-danger)', borderColor: 'var(--color-danger)', fontSize: '0.75rem' }} title="Trigger Network Error">
           Test Error
         </button>
-        <div style={{ position: 'relative' }}>
-          <button 
-            className="btn btn-outline" 
-            style={{ padding: '8px', color: showFilters ? 'var(--color-primary)' : 'var(--color-text-muted)', borderColor: showFilters ? 'var(--color-primary)' : 'var(--color-border)' }} 
-            title="Filter"
-            onClick={() => setShowFilters(!showFilters)}
-          >
-            <Filter size={18} />
-          </button>
-          
-          {showFilters && (
-            <div style={{
-              position: 'absolute', right: 0, top: '100%', marginTop: '8px',
-              backgroundColor: 'var(--color-surface)', border: '1px solid var(--color-border)',
-              borderRadius: 'var(--radius-md)', padding: '16px', boxShadow: 'var(--shadow-lg)',
-              zIndex: 50, display: 'flex', flexDirection: 'column', gap: '12px', minWidth: '200px'
-            }}>
-              <div>
-                <label className="input-label" style={{ fontSize: '0.75rem', marginBottom: '4px' }}>Assignee</label>
-                <select 
-                  className="input-field" 
-                  style={{ padding: '6px 10px', fontSize: '0.875rem' }}
-                  value={filters.assignee}
-                  onChange={(e) => setFilters(prev => ({ ...prev, assignee: e.target.value }))}
-                >
-                  <option value="">All Assignees</option>
-                  {members.map(m => <option key={m.id} value={m.id}>{m.name}</option>)}
-                </select>
-              </div>
-              <div>
-                <label className="input-label" style={{ fontSize: '0.75rem', marginBottom: '4px' }}>Status</label>
-                <select 
-                  className="input-field"
-                  style={{ padding: '6px 10px', fontSize: '0.875rem' }}
-                  value={filters.status}
-                  onChange={(e) => setFilters(prev => ({ ...prev, status: e.target.value }))}
-                >
-                  <option value="">All Statuses</option>
-                  {columns.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
-                </select>
-              </div>
-            </div>
-          )}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <div style={{ position: 'relative' }}>
+            <select 
+              className="input-field" 
+              style={{ padding: '8px 10px', fontSize: '0.875rem', width: '140px', appearance: 'none' }}
+              value={filters.assignee}
+              onChange={(e) => setFilters(prev => ({ ...prev, assignee: e.target.value }))}
+            >
+              <option value="">All Assignees</option>
+              {members.map(m => <option key={m.id} value={m.id}>{m.name}</option>)}
+            </select>
+          </div>
+          <div style={{ position: 'relative' }}>
+            <select 
+              className="input-field"
+              style={{ padding: '8px 10px', fontSize: '0.875rem', width: '130px', appearance: 'none' }}
+              value={filters.status}
+              onChange={(e) => setFilters(prev => ({ ...prev, status: e.target.value }))}
+            >
+              <option value="">All Statuses</option>
+              {columns.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+            </select>
+          </div>
         </div>
         <div style={{ position: 'relative', width: '200px' }}>
           <Search size={16} style={{ position: 'absolute', left: '10px', top: '10px', color: 'var(--color-text-muted)' }} />
@@ -169,7 +148,7 @@ export default function BoardPage() {
           />
         </div>
         {isOwner && (
-          <Link to="/tasks/new" className="btn btn-primary" style={{ textDecoration: 'none', backgroundColor: '#10B981', borderColor: '#10B981' }}>
+          <Link to="/tasks/new" className="btn btn-primary" style={{ textDecoration: 'none' }}>
             <Plus size={16} /> New Task
           </Link>
         )}
@@ -187,7 +166,7 @@ export default function BoardPage() {
   );
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', height: '100vh', padding: '24px', backgroundColor: 'var(--color-surface)' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', height: '100vh', padding: '24px', backgroundColor: 'var(--color-background)' }}>
       {header}
       
       <div style={{ display: 'flex', flex: 1, overflow: 'hidden' }}>
@@ -196,13 +175,13 @@ export default function BoardPage() {
             <EmptyState 
               title="No Boards Found" 
               subtitle="Create a new board to get started."
-              action={<button onClick={() => setShowCreateBoard(true)} className="btn btn-primary" style={{ backgroundColor: '#10B981', borderColor: '#10B981' }}>Create Board</button>} 
+              action={<button onClick={() => setShowCreateBoard(true)} className="btn btn-primary">Create Board</button>} 
             />
           ) : tasks.length === 0 && !filters.search ? (
             <EmptyState 
               title={`Welcome to ${activeBoard?.name}`} 
               subtitle="Your board is empty. Start by creating a task."
-              action={<Link to="/tasks/new" className="btn btn-primary" style={{ textDecoration: 'none', backgroundColor: '#10B981', borderColor: '#10B981' }}>Create First Task</Link>} 
+              action={<Link to="/tasks/new" className="btn btn-primary" style={{ textDecoration: 'none' }}>Create First Task</Link>} 
             />
           ) : visibleTasks.length === 0 ? (
             <EmptyState title="No tasks match your filters" subtitle="Try adjusting your search criteria." />
@@ -214,6 +193,28 @@ export default function BoardPage() {
 
       {showCreateBoard && <CreateBoardDialog onClose={() => setShowCreateBoard(false)} />}
       {showInviteDialog && <InviteMemberDialog onClose={() => setShowInviteDialog(false)} />}
+      
+      <button 
+        onClick={() => setShowCreateBoard(true)}
+        className="btn btn-primary"
+        style={{
+          position: 'fixed',
+          bottom: '32px',
+          right: '32px',
+          width: '56px',
+          height: '56px',
+          borderRadius: '50%',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          boxShadow: 'var(--shadow-lg)',
+          padding: 0,
+          zIndex: 40
+        }}
+        title="Create New Board"
+      >
+        <Plus size={24} />
+      </button>
     </div>
   );
 }

@@ -32,11 +32,7 @@ export default function InviteMemberDialog({ onClose }) {
   };
 
   return (
-    <div style={{
-      position: 'fixed', inset: 0, backgroundColor: 'rgba(0,0,0,0.4)',
-      backdropFilter: 'blur(4px)', display: 'flex', alignItems: 'center', justifyContent: 'center',
-      zIndex: 100, padding: '24px'
-    }}>
+    <div style={{ position: 'fixed', inset: 0, backgroundColor: 'rgba(15, 23, 42, 0.6)', backdropFilter: 'blur(8px)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 100, padding: '24px' }}>
       <div className="glass-panel" style={{
         backgroundColor: 'var(--color-surface)', borderRadius: 'var(--radius-lg)',
         width: '100%', maxWidth: '400px', boxShadow: 'var(--shadow-xl)',

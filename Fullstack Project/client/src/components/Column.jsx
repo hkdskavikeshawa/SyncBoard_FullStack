@@ -51,10 +51,13 @@ export default function Column({ column, tasks }) {
       onDragLeave={handleDragLeave}
       onDrop={handleDrop}
       style={{ 
-        flex: 1, minWidth: '320px', backgroundColor: isDragOver ? '#E2E8F0' : '#F3F4F6', 
-        borderRadius: 'var(--radius-lg)', padding: '16px', display: 'flex', flexDirection: 'column',
-        transition: 'background-color 0.2s',
-        border: isDragOver ? '2px dashed #10B981' : '2px solid transparent',
+        flex: 1, minWidth: '320px', 
+        backgroundColor: isDragOver ? 'rgba(255, 255, 255, 0.4)' : 'var(--color-surface)', 
+        backdropFilter: 'blur(12px)',
+        borderRadius: '24px', padding: '20px', display: 'flex', flexDirection: 'column',
+        transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+        border: isDragOver ? '2px dashed var(--color-success)' : '2px solid transparent',
+        boxShadow: isDragOver ? 'var(--shadow-glow)' : 'var(--shadow-sm)',
         height: '100%',
         overflow: 'hidden'
       }}>
@@ -135,7 +138,11 @@ export default function Column({ column, tasks }) {
       
       <div style={{ flex: 1, overflowY: 'auto', paddingRight: '4px' }}>
         {tasks.length === 0 ? (
-          <div style={{ padding: '24px', textAlign: 'center', color: 'var(--color-text-muted)', fontSize: '0.875rem', border: '2px dashed var(--color-border)', borderRadius: 'var(--radius-md)' }}>
+          <div style={{ 
+            padding: '40px 24px', textAlign: 'center', color: 'var(--color-text-muted)', 
+            fontSize: '0.875rem', border: '2px dashed var(--color-border)', borderRadius: '16px',
+            backgroundColor: 'rgba(248, 250, 252, 0.5)'
+          }}>
             Drop tasks here
           </div>
         ) : (

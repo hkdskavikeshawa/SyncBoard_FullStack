@@ -15,7 +15,7 @@ export default function CreateBoardDialog({ onClose }) {
   };
 
   return (
-    <div style={{ position: 'fixed', inset: 0, backgroundColor: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 100 }}>
+    <div style={{ position: 'fixed', inset: 0, backgroundColor: 'rgba(15, 23, 42, 0.6)', backdropFilter: 'blur(8px)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 100 }}>
       <div className="glass-panel" style={{ width: '400px', padding: '24px', borderRadius: 'var(--radius-lg)' }}>
         <h2 style={{ fontSize: '1.25rem', fontWeight: 700, marginBottom: '16px' }}>Create New Board</h2>
         <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>

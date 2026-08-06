@@ -1,3 +1,5 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+
 :root {
   /* Color Palette - Ocean & Slate */
   --color-primary: #0F766E;
@@ -23,9 +25,10 @@
   --radius-lg: 16px;
   
   /* Shadows */
-  --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
-  --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
-  --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+  --shadow-sm: 0 2px 4px 0 rgba(0, 0, 0, 0.05);
+  --shadow-md: 0 10px 15px -3px rgba(0, 0, 0, 0.08), 0 4px 6px -4px rgba(0, 0, 0, 0.04);
+  --shadow-lg: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.05);
+  --shadow-glow: 0 0 15px rgba(16, 185, 129, 0.3);
 }
 
 * {
@@ -58,7 +61,7 @@ body {
   justify-content: center;
   gap: 8px;
   padding: 8px 16px;
-  border-radius: var(--radius-sm);
+  border-radius: 9999px; /* Pill shape */
   font-weight: 500;
   cursor: pointer;
   transition: all 0.2s ease;
@@ -67,13 +70,14 @@ body {
 }
 
 .btn-primary {
-  background-color: var(--color-primary);
+  background: linear-gradient(135deg, var(--color-success), var(--color-primary));
   color: white;
+  border: none;
 }
 .btn-primary:hover {
-  background-color: var(--color-primary-hover);
+  background: linear-gradient(135deg, #059669, #0d5c56);
   box-shadow: var(--shadow-md);
-  transform: translateY(-1px);
+  transform: translateY(-2px);
 }
 
 .btn-outline {
@@ -108,8 +112,8 @@ body {
 }
 .input-field:focus {
   outline: none;
-  border-color: var(--color-primary);
-  box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
+  border-color: var(--color-success);
+  box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.2);
 }
 .input-label {
   display: block;

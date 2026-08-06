@@ -41,17 +41,20 @@ export default function TaskCard({ task }) {
         onMouseEnter={() => setIsHovered(true)}
         onMouseLeave={() => { setIsHovered(false); setShowMenu(false); }}
         style={{
-          padding: '16px', borderRadius: 'var(--radius-md)', marginBottom: '16px',
-          position: 'relative', transition: 'all 0.2s', backgroundColor: 'var(--color-surface)',
+          padding: '16px', borderRadius: '16px', marginBottom: '16px',
+          position: 'relative', transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)', 
+          backgroundColor: 'var(--color-surface)',
           cursor: 'grab', border: '1px solid var(--color-border)',
-          boxShadow: '0 2px 4px rgba(0,0,0,0.02)'
+          borderLeft: `4px solid var(--color-primary)`,
+          boxShadow: isHovered ? 'var(--shadow-md)' : 'var(--shadow-sm)',
+          transform: isHovered ? 'translateY(-4px)' : 'none'
         }}
-        onDrag={(e) => e.currentTarget.style.borderColor = '#10B981'}
+        onDrag={(e) => e.currentTarget.style.borderColor = 'var(--color-success)'}
         onDragEnd={(e) => e.currentTarget.style.borderColor = 'var(--color-border)'}
       >
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
           <div>
-            <h4 style={{ margin: '0 0 4px 0', fontSize: '0.9375rem', fontWeight: 600 }}>
+            <h4 style={{ margin: '0 0 6px 0', fontSize: '1rem', fontWeight: 600, color: 'var(--color-text-main)' }}>
               <Link to={`/tasks/${task.id}`} style={{ textDecoration: 'none', color: 'var(--color-text-main)' }}>
                 {task.title}
               </Link>
