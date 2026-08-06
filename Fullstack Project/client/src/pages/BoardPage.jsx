@@ -10,6 +10,7 @@ import { Link } from 'react-router-dom';
 import { simulateNextFailure } from '../api/tasks';
 import CreateBoardDialog from '../components/CreateBoardDialog';
 import InviteMemberDialog from '../components/InviteMemberDialog';
+import PromptDialog from '../components/PromptDialog';
 import { useAuth } from '../context/AuthContext';
 
 export default function BoardPage() {
@@ -19,6 +20,7 @@ export default function BoardPage() {
   const [showBoardSelector, setShowBoardSelector] = useState(false);
   const [showCreateBoard, setShowCreateBoard] = useState(false);
   const [showInviteDialog, setShowInviteDialog] = useState(false);
+  const [showRenameBoard, setShowRenameBoard] = useState(false);
 
   const activeBoard = boards.find(b => b.id === activeBoardId);
 
@@ -27,11 +29,11 @@ export default function BoardPage() {
     loadBoardData(activeBoardId);
   };
 
-  const handleRenameBoard = () => {
-    const newName = prompt('Enter new board name:', activeBoard.name);
-    if (newName && newName.trim() && newName !== activeBoard.name) {
-      updateBoard(activeBoard.id, { name: newName.trim() });
+  const handleRenameBoardConfirm = (newName) => {
+    if (newName && newName !== activeBoard.name) {
+      updateBoard(activeBoard.id, { name: newName });
     }
+    setShowRenameBoard(false);
   };
 
   const handleDeleteBoard = () => {
@@ -48,9 +50,7 @@ export default function BoardPage() {
   const header = (
     <div className="glass-panel" style={{ position: 'relative', zIndex: 10, display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px', padding: '16px 24px', borderRadius: 'var(--radius-lg)' }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
-        <h1 style={{ fontSize: '1.5rem', fontWeight: 700, margin: 0 }}>
-          CodeForge
-        </h1>
+        <img src="/logo.png" alt="CodeForge" style={{ height: '32px' }} />
         <div style={{ width: '1px', height: '24px', backgroundColor: 'var(--color-border)' }}></div>
         <div style={{ position: 'relative' }}>
           <button 
@@ -98,7 +98,7 @@ export default function BoardPage() {
             <button onClick={() => setShowInviteDialog(true)} title="Invite Member" style={{ padding: '6px', background: 'none', border: 'none', cursor: 'pointer', color: 'var(--color-primary)', borderRadius: '4px' }} onMouseEnter={e => e.target.style.backgroundColor = 'var(--color-bg)'} onMouseLeave={e => e.target.style.backgroundColor = 'transparent'}>
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ pointerEvents: 'none' }}><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="8.5" cy="7" r="4"></circle><line x1="20" y1="8" x2="20" y2="14"></line><line x1="23" y1="11" x2="17" y2="11"></line></svg>
             </button>
-            <button onClick={handleRenameBoard} title="Rename Board" style={{ padding: '6px', background: 'none', border: 'none', cursor: 'pointer', color: 'var(--color-text-muted)', borderRadius: '4px' }} onMouseEnter={e => e.target.style.backgroundColor = 'var(--color-border)'} onMouseLeave={e => e.target.style.backgroundColor = 'transparent'}>
+            <button onClick={() => setShowRenameBoard(true)} title="Rename Board" style={{ padding: '6px', background: 'none', border: 'none', cursor: 'pointer', color: 'var(--color-text-muted)', borderRadius: '4px' }} onMouseEnter={e => e.target.style.backgroundColor = 'var(--color-border)'} onMouseLeave={e => e.target.style.backgroundColor = 'transparent'}>
               <Pencil size={14} style={{ pointerEvents: 'none' }} />
             </button>
             <button onClick={handleDeleteBoard} title="Delete Board" style={{ padding: '6px', background: 'none', border: 'none', cursor: 'pointer', color: '#DC2626', borderRadius: '4px' }} onMouseEnter={e => e.target.style.backgroundColor = '#FEE2E2'} onMouseLeave={e => e.target.style.backgroundColor = 'transparent'}>
@@ -193,6 +193,14 @@ export default function BoardPage() {
 
       {showCreateBoard && <CreateBoardDialog onClose={() => setShowCreateBoard(false)} />}
       {showInviteDialog && <InviteMemberDialog onClose={() => setShowInviteDialog(false)} />}
+      {showRenameBoard && (
+        <PromptDialog 
+          title="Rename Board" 
+          defaultValue={activeBoard.name}
+          onConfirm={handleRenameBoardConfirm} 
+          onCancel={() => setShowRenameBoard(false)} 
+        />
+      )}
       
       <button 
         onClick={() => setShowCreateBoard(true)}

@@ -1,14 +1,15 @@
 import Column from './Column';
 import { useTasks } from '../hooks/useTasks';
+import { useState } from 'react';
+import PromptDialog from './PromptDialog';
 
 export default function Board({ tasks }) {
   const { columns, addColumn, isOwner } = useTasks();
+  const [showAddColumn, setShowAddColumn] = useState(false);
 
-  const handleAddColumn = () => {
-    const name = prompt('Enter new column name:');
-    if (name && name.trim()) {
-      addColumn(name.trim());
-    }
+  const handleConfirmAdd = (name) => {
+    addColumn(name);
+    setShowAddColumn(false);
   };
 
   return (
@@ -24,7 +25,7 @@ export default function Board({ tasks }) {
       ))}
       {isOwner && (
         <button 
-          onClick={handleAddColumn}
+          onClick={() => setShowAddColumn(true)}
           style={{ 
             minWidth: '320px', height: 'fit-content', padding: '16px', 
             backgroundColor: 'transparent', border: '2px dashed var(--color-border)', 
@@ -35,6 +36,15 @@ export default function Board({ tasks }) {
         >
           + Add Column
         </button>
+      )}
+
+      {showAddColumn && (
+        <PromptDialog 
+          title="Enter new column name:" 
+          placeholder="e.g. In Progress"
+          onConfirm={handleConfirmAdd} 
+          onCancel={() => setShowAddColumn(false)} 
+        />
       )}
     </div>
   );
