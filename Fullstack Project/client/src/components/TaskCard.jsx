@@ -103,8 +103,8 @@ export default function TaskCard({ task }) {
           {task.dueDate ? (
             <div style={{ 
               display: 'flex', alignItems: 'center', gap: '4px',
-              backgroundColor: isOverdue ? '#FEE2E2' : '#F3F4F6', 
-              color: isOverdue ? '#DC2626' : '#4B5563', 
+              backgroundColor: isOverdue ? '#FEE2E2' : '#D1FAE5', 
+              color: isOverdue ? '#DC2626' : '#059669', 
               padding: '4px 10px', 
               borderRadius: '16px', fontSize: '0.75rem', fontWeight: 500 
             }}>
