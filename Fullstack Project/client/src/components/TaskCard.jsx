@@ -47,7 +47,7 @@ export default function TaskCard({ task }) {
                 {task.title}
               </Link>
             </h4>
-            <p style={{ margin: '0 0 16px 0', fontSize: '0.8125rem', color: '#9CA3AF' }}>
+            <p style={{ margin: '0 0 12px 0', fontSize: '0.8125rem', color: '#9CA3AF' }}>
               #CF-{task.id.slice(0, 3).toUpperCase() || '104'}
             </p>
           </div>
@@ -85,13 +85,35 @@ export default function TaskCard({ task }) {
           </div>
         </div>
         
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        {task.description && (
           <div style={{ 
-            backgroundColor: '#F3F4F6', color: '#4B5563', padding: '4px 12px', 
-            borderRadius: '16px', fontSize: '0.75rem', fontWeight: 500 
+            fontSize: '0.875rem', 
+            color: 'var(--color-text-muted)', 
+            marginBottom: '16px',
+            display: '-webkit-box',
+            WebkitLineClamp: 4,
+            WebkitBoxOrient: 'vertical',
+            overflow: 'hidden'
           }}>
-            Status
+            {task.description}
           </div>
+        )}
+        
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          {task.dueDate ? (
+            <div style={{ 
+              display: 'flex', alignItems: 'center', gap: '4px',
+              backgroundColor: isOverdue ? '#FEE2E2' : '#F3F4F6', 
+              color: isOverdue ? '#DC2626' : '#4B5563', 
+              padding: '4px 10px', 
+              borderRadius: '16px', fontSize: '0.75rem', fontWeight: 500 
+            }}>
+              <Calendar size={14} />
+              {new Date(task.dueDate).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}
+            </div>
+          ) : (
+            <div />
+          )}
           <div style={{ display: 'flex', alignItems: 'center' }}>
             {assignees.length === 0 ? (
               <div style={{ width: '28px', height: '28px', borderRadius: '50%', backgroundColor: '#E5E7EB', color: '#374151', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.625rem', fontWeight: 600, border: '1px solid #FFFFFF' }}>
