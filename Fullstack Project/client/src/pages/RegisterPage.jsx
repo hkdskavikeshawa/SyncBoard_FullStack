@@ -6,6 +6,7 @@ export default function RegisterPage() {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const { register } = useAuth();
@@ -13,6 +14,10 @@ export default function RegisterPage() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (password !== confirmPassword) {
+      setError('Passwords do not match');
+      return;
+    }
     setError('');
     setLoading(true);
     try {
@@ -68,6 +73,18 @@ export default function RegisterPage() {
               className="input-field" 
               value={password}
               onChange={(e) => setPassword(e.target.value)}
+              placeholder="••••••••"
+              minLength={6}
+            />
+          </div>
+          <div>
+            <label className="input-label">Re-enter Password</label>
+            <input 
+              type="password" 
+              required
+              className="input-field" 
+              value={confirmPassword}
+              onChange={(e) => setConfirmPassword(e.target.value)}
               placeholder="••••••••"
               minLength={6}
             />
