@@ -77,10 +77,16 @@ export default function Column({ column, tasks }) {
         ) : (
           <h3 
             onClick={() => setIsEditing(true)}
-            style={{ fontSize: '0.875rem', fontWeight: 700, color: '#9CA3AF', textTransform: 'uppercase', display: 'flex', alignItems: 'center', gap: '8px', letterSpacing: '0.05em', cursor: 'pointer' }}
+            style={{ fontSize: '0.875rem', fontWeight: 700, color: '#9CA3AF', textTransform: 'uppercase', display: 'flex', alignItems: 'center', gap: '8px', letterSpacing: '0.05em', cursor: 'pointer', margin: 0 }}
             title="Click to rename"
           >
-            {column.name} ({tasks.length})
+            {column.name}
+            <span style={{ 
+              backgroundColor: '#E5E7EB', color: '#4B5563', padding: '2px 8px', 
+              borderRadius: '12px', fontSize: '0.75rem', fontWeight: 600 
+            }}>
+              {tasks.length}
+            </span>
           </h3>
         )}
         {isOwner && (
