@@ -187,7 +187,7 @@ export default function BoardPage() {
   );
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', height: '100vh', padding: '24px', backgroundColor: 'var(--color-surface)' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', height: '100%', padding: '24px', backgroundColor: 'var(--color-surface)' }}>
       {header}
       
       <div style={{ display: 'flex', flex: 1, overflow: 'hidden' }}>
