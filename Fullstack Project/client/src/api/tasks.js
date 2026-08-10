@@ -1,4 +1,5 @@
 import { seedTasks, columns as seedColumns, boards as seedBoards, members } from '../data/mockData';
+import { getUserByEmail } from './auth';
 
 const DELAY = 600;
 let FAIL_NEXT = false;
@@ -89,20 +90,52 @@ export async function deleteColumn(id) {
   cols = cols.filter(c => c.id !== id);
 }
 
-export async function getBoards() {
+export async function getBoards(userId) {
   await sleep(100);
-  return clone(brds);
+  return clone(brds.filter(b => b.ownerId === userId || (b.invitedMembers || []).includes(userId)));
+}
+
+export async function inviteUserByEmail(boardId, email) {
+  await sleep(100);
+  const user = await getUserByEmail(email);
+  const board = brds.find(b => b.id === boardId);
+  if (!board) throw new NotFoundError('Board not found');
+  if (board.ownerId === user.id) throw new Error('User is already the owner of this board');
+  
+  board.invitedMembers = board.invitedMembers || [];
+  if (board.invitedMembers.includes(user.id)) {
+    throw new Error('User is already invited to this board');
+  }
+  
+  board.invitedMembers.push(user.id);
+  return clone(board);
 }
 
 export async function createBoard(name, ownerId) {
   await sleep(100);
-  const b = { id: crypto.randomUUID(), name, ownerId };
+  const b = { id: crypto.randomUUID(), name, ownerId, invitedMembers: [] };
   brds.push(b);
   // Give it default columns
   ['To Do', 'In Progress', 'Done'].forEach((n, i) => {
     cols.push({ id: crypto.randomUUID(), boardId: b.id, name: n, order: i + 1 });
   });
   return clone(b);
+}
+
+export async function updateBoard(id, patch) {
+  await sleep(100);
+  const idx = brds.findIndex((b) => b.id === id);
+  if (idx === -1) throw new NotFoundError(`Board ${id} not found`);
+  brds[idx] = { ...brds[idx], ...patch };
+  return clone(brds[idx]);
+}
+
+export async function deleteBoard(id) {
+  await sleep(100);
+  brds = brds.filter(b => b.id !== id);
+  // Also clean up columns and tasks related to this board
+  cols = cols.filter(c => c.boardId !== id);
+  db = db.filter(t => t.boardId !== id);
 }
 
 export async function getMembers() {

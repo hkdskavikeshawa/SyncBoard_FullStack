@@ -1,14 +1,15 @@
 import Column from './Column';
 import { useTasks } from '../hooks/useTasks';
+import { useState } from 'react';
+import PromptDialog from './PromptDialog';
 
 export default function Board({ tasks }) {
-  const { columns, addColumn } = useTasks();
+  const { columns, addColumn, isOwner } = useTasks();
+  const [showAddColumn, setShowAddColumn] = useState(false);
 
-  const handleAddColumn = () => {
-    const name = prompt('Enter new column name:');
-    if (name && name.trim()) {
-      addColumn(name.trim());
-    }
+  const handleConfirmAdd = (name) => {
+    addColumn(name);
+    setShowAddColumn(false);
   };
 
   return (
@@ -22,18 +23,29 @@ export default function Board({ tasks }) {
           tasks={tasks.filter(t => t.columnId === column.id)} 
         />
       ))}
-      <button 
-        onClick={handleAddColumn}
-        style={{ 
-          minWidth: '320px', height: 'fit-content', padding: '16px', 
-          backgroundColor: 'transparent', border: '2px dashed var(--color-border)', 
-          borderRadius: 'var(--radius-lg)', color: 'var(--color-text-muted)',
-          cursor: 'pointer', fontSize: '1rem', fontWeight: 600,
-          display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px'
-        }}
-      >
-        + Add Column
-      </button>
+      {isOwner && (
+        <button 
+          onClick={() => setShowAddColumn(true)}
+          style={{ 
+            minWidth: '320px', height: 'fit-content', padding: '16px', 
+            backgroundColor: 'transparent', border: '2px dashed var(--color-border)', 
+            borderRadius: 'var(--radius-lg)', color: 'var(--color-text-muted)',
+            cursor: 'pointer', fontSize: '1rem', fontWeight: 600,
+            display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px'
+          }}
+        >
+          + Add Column
+        </button>
+      )}
+
+      {showAddColumn && (
+        <PromptDialog 
+          title="Enter new column name:" 
+          placeholder="e.g. In Progress"
+          onConfirm={handleConfirmAdd} 
+          onCancel={() => setShowAddColumn(false)} 
+        />
+      )}
     </div>
   );
 }

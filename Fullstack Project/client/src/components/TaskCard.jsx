@@ -4,13 +4,22 @@ import { useTasks } from '../hooks/useTasks';
 import { useState } from 'react';
 import ConfirmDialog from './ConfirmDialog';
 
+const getAvatarColor = (name) => {
+  let hash = 0;
+  for (let i = 0; i < name.length; i++) {
+    hash = name.charCodeAt(i) + ((hash << 5) - hash);
+  }
+  const h = Math.abs(hash) % 360;
+  return `hsl(${h}, 65%, 55%)`;
+};
+
 export default function TaskCard({ task }) {
-  const { members, columns, moveTask, removeTask } = useTasks();
+  const { members, columns, moveTask, removeTask, isOwner } = useTasks();
   const [isHovered, setIsHovered] = useState(false);
   const [showMenu, setShowMenu] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 
-  const assignee = members.find(m => m.id === task.assigneeId);
+  const assignees = (task.assigneeIds || []).map(id => members.find(m => m.id === id)).filter(Boolean);
   
   const isOverdue = task.dueDate && new Date(task.dueDate) < new Date(new Date().setHours(0,0,0,0));
 
@@ -32,22 +41,25 @@ export default function TaskCard({ task }) {
         onMouseEnter={() => setIsHovered(true)}
         onMouseLeave={() => { setIsHovered(false); setShowMenu(false); }}
         style={{
-          padding: '16px', borderRadius: 'var(--radius-md)', marginBottom: '16px',
-          position: 'relative', transition: 'all 0.2s', backgroundColor: 'var(--color-surface)',
+          padding: '16px', borderRadius: '16px', marginBottom: '16px',
+          position: 'relative', transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)', 
+          backgroundColor: 'var(--color-surface)',
           cursor: 'grab', border: '1px solid var(--color-border)',
-          boxShadow: '0 2px 4px rgba(0,0,0,0.02)'
+          borderLeft: `4px solid var(--color-primary)`,
+          boxShadow: isHovered ? 'var(--shadow-md)' : 'var(--shadow-sm)',
+          transform: isHovered ? 'translateY(-4px)' : 'none'
         }}
-        onDrag={(e) => e.currentTarget.style.borderColor = '#10B981'}
+        onDrag={(e) => e.currentTarget.style.borderColor = 'var(--color-success)'}
         onDragEnd={(e) => e.currentTarget.style.borderColor = 'var(--color-border)'}
       >
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
           <div>
-            <h4 style={{ margin: '0 0 4px 0', fontSize: '0.9375rem', fontWeight: 600 }}>
+            <h4 style={{ margin: '0 0 6px 0', fontSize: '1rem', fontWeight: 600, color: 'var(--color-text-main)' }}>
               <Link to={`/tasks/${task.id}`} style={{ textDecoration: 'none', color: 'var(--color-text-main)' }}>
                 {task.title}
               </Link>
             </h4>
-            <p style={{ margin: '0 0 16px 0', fontSize: '0.8125rem', color: '#9CA3AF' }}>
+            <p style={{ margin: '0 0 12px 0', fontSize: '0.8125rem', color: '#9CA3AF' }}>
               #CF-{task.id.slice(0, 3).toUpperCase() || '104'}
             </p>
           </div>
@@ -72,31 +84,71 @@ export default function TaskCard({ task }) {
                     {col.name}
                   </button>
                 ))}
-                <div style={{ borderTop: '1px solid var(--color-border)' }}>
-                  <button onClick={() => { setShowMenu(false); setShowDeleteConfirm(true); }} 
-                    style={{ display: 'block', width: '100%', padding: '8px', textAlign: 'left', border: 'none', background: 'none', cursor: 'pointer', color: 'var(--color-danger)', fontSize: '0.875rem' }}>
-                    Delete Task
-                  </button>
-                </div>
+                {isOwner && (
+                  <div style={{ borderTop: '1px solid var(--color-border)' }}>
+                    <button onClick={() => { setShowMenu(false); setShowDeleteConfirm(true); }} 
+                      style={{ display: 'block', width: '100%', padding: '8px', textAlign: 'left', border: 'none', background: 'none', cursor: 'pointer', color: 'var(--color-danger)', fontSize: '0.875rem' }}>
+                      Delete Task
+                    </button>
+                  </div>
+                )}
               </div>
             )}
           </div>
         </div>
         
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        {task.description && (
           <div style={{ 
-            backgroundColor: '#F3F4F6', color: '#4B5563', padding: '4px 12px', 
-            borderRadius: '16px', fontSize: '0.75rem', fontWeight: 500 
+            fontSize: '0.875rem', 
+            color: 'var(--color-text-muted)', 
+            marginBottom: '16px',
+            display: '-webkit-box',
+            WebkitLineClamp: 4,
+            WebkitBoxOrient: 'vertical',
+            overflow: 'hidden'
           }}>
-            Status
+            {task.description}
           </div>
-          <div style={{ 
-            width: '28px', height: '28px', borderRadius: '50%', 
-            backgroundColor: '#E5E7EB', color: '#374151',
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-            fontSize: '0.625rem', fontWeight: 600, border: '1px solid #FFFFFF'
-          }}>
-            {assignee ? assignee.name.split(' ').map(n=>n[0]).join('').toUpperCase() : '??'}
+        )}
+        
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          {task.dueDate ? (
+            <div style={{ 
+              display: 'flex', alignItems: 'center', gap: '4px',
+              backgroundColor: isOverdue ? '#FEE2E2' : '#D1FAE5', 
+              color: isOverdue ? '#DC2626' : '#059669', 
+              padding: '4px 10px', 
+              borderRadius: '16px', fontSize: '0.75rem', fontWeight: 500 
+            }}>
+              <Calendar size={14} />
+              {new Date(task.dueDate).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}
+            </div>
+          ) : (
+            <div />
+          )}
+          <div style={{ display: 'flex', alignItems: 'center' }}>
+            {assignees.length === 0 ? (
+              <div style={{ width: '28px', height: '28px', borderRadius: '50%', backgroundColor: '#E5E7EB', color: '#374151', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.625rem', fontWeight: 600, border: '1px solid #FFFFFF' }}>
+                ??
+              </div>
+            ) : (
+              assignees.slice(0, 3).map((a, i) => (
+                <div key={a.id} style={{ 
+                  width: '28px', height: '28px', borderRadius: '50%', 
+                  backgroundColor: getAvatarColor(a.name), color: '#FFFFFF',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  fontSize: '0.625rem', fontWeight: 600, border: '1px solid #FFFFFF',
+                  marginLeft: i > 0 ? '-8px' : '0', zIndex: 10 - i
+                }} title={a.name}>
+                  {a.name.split(' ').map(n=>n[0]).join('').toUpperCase()}
+                </div>
+              ))
+            )}
+            {assignees.length > 3 && (
+              <div style={{ width: '28px', height: '28px', borderRadius: '50%', backgroundColor: '#F3F4F6', color: '#6B7280', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.625rem', fontWeight: 600, border: '1px solid #FFFFFF', marginLeft: '-8px', zIndex: 1 }}>
+                +{assignees.length - 3}
+              </div>
+            )}
           </div>
         </div>
       </div>

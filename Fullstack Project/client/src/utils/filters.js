@@ -1,6 +1,6 @@
 export function applyFilters(tasks, filters) {
   return tasks.filter(task => {
-    if (filters.assignee && task.assigneeId !== filters.assignee) return false;
+    if (filters.assignee && !(task.assigneeIds || []).includes(filters.assignee)) return false;
     if (filters.status && task.columnId !== filters.status) return false;
     if (filters.search) {
       const searchLower = filters.search.toLowerCase();

@@ -8,7 +8,7 @@ import NotFoundPage from './NotFoundPage';
 export default function TaskDetailPage() {
   const { id } = useParams();
   const navigate = useNavigate();
-  const { tasks, addTask, updateTaskDetails } = useTasks();
+  const { tasks, columns, addTask, updateTaskDetails, isOwner } = useTasks();
   
   const isNew = id === 'new';
   const [task, setTask] = useState(null);
@@ -17,8 +17,10 @@ export default function TaskDetailPage() {
     if (!isNew) {
       const found = tasks.find(t => t.id === id);
       setTask(found || null);
+    } else if (!isOwner) {
+      navigate('/');
     }
-  }, [id, tasks, isNew]);
+  }, [id, tasks, isNew, isOwner, navigate]);
 
   if (!isNew && !task) {
     return <NotFoundPage />;
@@ -26,7 +28,13 @@ export default function TaskDetailPage() {
 
   const handleSubmit = async (formData) => {
     if (isNew) {
-      await addTask({ ...formData, columnId: 'todo' });
+      if (columns.length === 0) {
+        alert("Please create a column first before adding a task.");
+        return;
+      }
+      // Place it in the first column by order
+      const defaultColumnId = [...columns].sort((a,b) => a.order - b.order)[0].id;
+      await addTask({ ...formData, columnId: defaultColumnId });
     } else {
       await updateTaskDetails(id, formData);
     }

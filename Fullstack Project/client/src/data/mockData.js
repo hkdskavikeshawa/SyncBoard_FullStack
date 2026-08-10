@@ -1,6 +1,6 @@
 export const boards = [
-  { id: 'b1', name: 'Frontend Redesign', ownerId: 'u1' },
-  { id: 'b2', name: 'Backend API V2', ownerId: 'u2' }
+  { id: 'b1', name: 'Frontend Redesign', ownerId: 'u1', invitedMembers: [] },
+  { id: 'b2', name: 'Backend API V2', ownerId: 'u2', invitedMembers: ['u1'] }
 ];
 
 export const columns = [
@@ -26,7 +26,7 @@ export const seedTasks = [
     description: 'Three columns, responsive down to tablet.',
     columnId: 'backlog',
     boardId: 'b1',
-    assigneeId: 'u1',
+    assigneeIds: ['u1'],
     dueDate: '2026-08-20',
     createdAt: '2026-08-02T09:00:00.000Z',
   },
@@ -36,7 +36,7 @@ export const seedTasks = [
     description: 'Initialize React + Vite project and add router.',
     columnId: 'in-progress',
     boardId: 'b1',
-    assigneeId: 'u2',
+    assigneeIds: ['u2'],
     dueDate: '2026-08-05',
     createdAt: '2026-08-03T10:00:00.000Z',
   },
@@ -46,7 +46,7 @@ export const seedTasks = [
     description: 'Finalize the project requirements.',
     columnId: 'done',
     boardId: 'b1',
-    assigneeId: 'u3',
+    assigneeIds: ['u3'],
     dueDate: '2026-08-01',
     createdAt: '2026-07-30T10:00:00.000Z',
   },
@@ -56,7 +56,7 @@ export const seedTasks = [
     description: 'Validation is not triggering on submit.',
     columnId: 'review',
     boardId: 'b1',
-    assigneeId: null,
+    assigneeIds: [],
     dueDate: '2026-08-04',
     createdAt: '2026-08-03T15:00:00.000Z',
   },
@@ -66,7 +66,7 @@ export const seedTasks = [
     description: 'Design the new tables for boards and columns.',
     columnId: 'c5',
     boardId: 'b2',
-    assigneeId: 'u1',
+    assigneeIds: ['u1', 'u2'],
     dueDate: '2026-08-10',
     createdAt: '2026-08-05T09:00:00.000Z',
   }
