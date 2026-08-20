@@ -40,20 +40,7 @@ export default function InviteMemberDialog({ onClose }) {
       }}> 
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '20px 24px', borderBottom: '1px solid var(--color-border)' }}> 
           <h2 style={{ fontSize: '1.25rem', fontWeight: 600, margin: 0, display: 'flex', alignItems: 'center', gap: '8px' }}> 
-            
-            <span style={{ 
-              width: '28px', 
-              height: '28px', 
-              border: '1.5px solid var(--color-primary)', 
-              borderRadius: '50%', 
-              display: 'flex', 
-              alignItems: 'center', 
-              justifyContent: 'center', 
-              flexShrink: 0 
-            }}> 
-              <UserPlus size={17} color="var(--color-primary)" /> 
-            </span> 
-
+            <UserPlus size={20} color="var(--color-primary)" /> 
             Invite Member 
           </h2> 
           <button onClick={onClose} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--color-text-muted)', padding: '4px' }}> 
@@ -93,14 +80,7 @@ export default function InviteMemberDialog({ onClose }) {
           )} 
            
           <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '12px' }}> 
-            <button 
-              type="button" 
-              onClick={onClose} 
-              className="btn btn-outline"
-              style={{ borderColor: 'var(--color-primary)' }}
-            >
-              Cancel
-            </button> 
+            <button type="button" onClick={onClose} className="btn btn-outline">Cancel</button> 
             <button type="submit" className="btn btn-primary" disabled={isSubmitting || !email.trim()}> 
               {isSubmitting ? 'Inviting...' : 'Send Invite'} 
             </button> 
@@ -109,4 +89,4 @@ export default function InviteMemberDialog({ onClose }) {
       </div> 
     </div> 
   ); 
-}
+} 
