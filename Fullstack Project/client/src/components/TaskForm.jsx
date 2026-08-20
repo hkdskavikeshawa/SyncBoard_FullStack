@@ -106,46 +106,19 @@ export default function TaskForm({ initialData, onSubmit, onCancel }) {
               width: '36px',
               height: '36px',
               borderRadius: '10px',
-
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
-
               background: 'rgba(34, 197, 94, 0.10)',
               color: '#16a34a',
-
               fontSize: '18px',
               fontWeight: 700
             }}
           >
-            ✓
+            
           </div>
 
-          <div>
-            <h2
-              style={{
-                margin: 0,
-                fontSize: '1.2rem',
-                fontWeight: 700,
-                color: 'var(--color-text)',
-                letterSpacing: '-0.01em'
-              }}
-            >
-              {initialData ? 'Edit Task' : 'Create Task'}
-            </h2>
-
-            <p
-              style={{
-                margin: '4px 0 0',
-                fontSize: '0.82rem',
-                color: 'var(--color-text-muted)'
-              }}
-            >
-              {initialData
-                ? 'Update your task details below.'
-                : 'Add the details below to create a new task.'}
-            </p>
-          </div>
+          
         </div>
       </div>
 
@@ -181,12 +154,11 @@ export default function TaskForm({ initialData, onSubmit, onCancel }) {
             width: '100%',
             boxSizing: 'border-box',
 
-            /* NO INNER BORDER */
+            /* No inner border */
             border: 'none',
 
             borderRadius: '9px',
             padding: '11px 12px',
-
             background: '#f7faf8',
 
             outline: 'none',
@@ -241,7 +213,7 @@ export default function TaskForm({ initialData, onSubmit, onCancel }) {
             width: '100%',
             boxSizing: 'border-box',
 
-            /* NO INNER BORDER */
+            /* No inner border */
             border: 'none',
 
             borderRadius: '9px',
@@ -288,7 +260,7 @@ export default function TaskForm({ initialData, onSubmit, onCancel }) {
             width: '100%',
             boxSizing: 'border-box',
 
-            /* NO INNER BORDER */
+            /* No inner border */
             border: 'none',
 
             borderRadius: '9px',
@@ -373,7 +345,7 @@ export default function TaskForm({ initialData, onSubmit, onCancel }) {
 
             padding: '7px',
 
-            /* NO INNER BORDER */
+            /* No inner border */
             border: 'none',
 
             borderRadius: '10px',
@@ -412,7 +384,7 @@ export default function TaskForm({ initialData, onSubmit, onCancel }) {
 
                   borderRadius: '8px',
 
-                  /* No border */
+                  /* No inner border */
                   border: 'none',
 
                   background: isSelected
@@ -482,14 +454,13 @@ export default function TaskForm({ initialData, onSubmit, onCancel }) {
       </div>
 
       {/* =========================
-          BUTTONS
+          FOOTER / BUTTONS
       ========================== */}
       <div
         style={{
           display: 'flex',
           justifyContent: 'flex-end',
           alignItems: 'center',
-
           gap: '10px',
 
           marginTop: '4px',
@@ -507,7 +478,6 @@ export default function TaskForm({ initialData, onSubmit, onCancel }) {
 
               borderRadius: '8px',
 
-              /* No forced border */
               background: '#f8faf9',
 
               transition: 'all 0.2s ease'
