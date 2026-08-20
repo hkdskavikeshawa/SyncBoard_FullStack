@@ -2,6 +2,12 @@ import { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useNavigate, Link } from 'react-router-dom';
 
+const inputStyle = {
+  border: '2px solid var(--color-primary)',
+  boxShadow: '0 0 0 3px rgba(16, 185, 129, 0.12)',
+  outline: 'none',
+};
+
 export default function RegisterPage() {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
@@ -32,8 +38,8 @@ export default function RegisterPage() {
 
   return (
     <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: 'var(--color-bg)', padding: '24px' }}>
-      <div className="glass-panel" style={{ width: '100%', maxWidth: '400px', padding: '32px', borderRadius: 'var(--radius-xl)' }}>
-        <h1 style={{ fontSize: '1.5rem', fontWeight: 700, marginBottom: '8px', textAlign: 'center' }}>Create Account</h1>
+      <div className="glass-panel" style={{ width: '100%', maxWidth: '400px', padding: '32px', borderRadius: '24px', border: '2px solid rgba(16, 185, 129, 0.35)', boxShadow: '0 8px 32px rgba(16, 185, 129, 0.10)' }}>
+        <h1 style={{ fontFamily: "'Poppins', 'Segoe UI', sans-serif", fontSize: '2rem', fontWeight: 700, letterSpacing: '-0.02em', color: 'var(--color-primary)', marginBottom: '8px', textAlign: 'center' }}>Create Account</h1>
         <p style={{ color: 'var(--color-text-muted)', fontSize: '0.875rem', marginBottom: '24px', textAlign: 'center' }}>Join CodeForge to collaborate on tasks</p>
         
         {error && (
@@ -52,6 +58,7 @@ export default function RegisterPage() {
               value={name}
               onChange={(e) => setName(e.target.value)}
               placeholder="John Doe"
+              style={inputStyle}
             />
           </div>
           <div>
@@ -63,6 +70,7 @@ export default function RegisterPage() {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               placeholder="you@example.com"
+              style={inputStyle}
             />
           </div>
           <div>
@@ -75,6 +83,7 @@ export default function RegisterPage() {
               onChange={(e) => setPassword(e.target.value)}
               placeholder="••••••••"
               minLength={6}
+              style={inputStyle}
             />
           </div>
           <div>
@@ -87,6 +96,7 @@ export default function RegisterPage() {
               onChange={(e) => setConfirmPassword(e.target.value)}
               placeholder="••••••••"
               minLength={6}
+              style={inputStyle}
             />
           </div>
           <button type="submit" disabled={loading} className="btn btn-primary" style={{ width: '100%', marginTop: '8px' }}>
