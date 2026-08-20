@@ -93,7 +93,14 @@ export default function InviteMemberDialog({ onClose }) {
           )} 
            
           <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '12px' }}> 
-            <button type="button" onClick={onClose} className="btn btn-outline">Cancel</button> 
+            <button 
+              type="button" 
+              onClick={onClose} 
+              className="btn btn-outline"
+              style={{ borderColor: 'var(--color-primary)' }}
+            >
+              Cancel
+            </button> 
             <button type="submit" className="btn btn-primary" disabled={isSubmitting || !email.trim()}> 
               {isSubmitting ? 'Inviting...' : 'Send Invite'} 
             </button> 
