@@ -1,0 +1,166 @@
+import { Calendar, User, MoreVertical } from 'lucide-react';
+import { Link } from 'react-router-dom';
+import { useTasks } from '../hooks/useTasks';
+import { useState } from 'react';
+import ConfirmDialog from './ConfirmDialog';
+
+const getAvatarColor = (name) => {
+  let hash = 0;
+  for (let i = 0; i < name.length; i++) {
+    hash = name.charCodeAt(i) + ((hash << 5) - hash);
+  }
+  const h = Math.abs(hash) % 360;
+  return `hsl(${h}, 65%, 55%)`;
+};
+
+export default function TaskCard({ task }) {
+  const { members, columns, moveTask, removeTask, isOwner } = useTasks();
+  const [isHovered, setIsHovered] = useState(false);
+  const [showMenu, setShowMenu] = useState(false);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+
+  const assignees = (task.assigneeIds || []).map(id => members.find(m => m.id === id)).filter(Boolean);
+  
+  const isOverdue = task.dueDate && new Date(task.dueDate) < new Date(new Date().setHours(0,0,0,0));
+
+  const handleDelete = async () => {
+    await removeTask(task.id);
+    setShowDeleteConfirm(false);
+  };
+
+  const handleDragStart = (e) => {
+    e.dataTransfer.setData('taskId', task.id);
+    e.dataTransfer.effectAllowed = 'move';
+  };
+
+  return (
+    <>
+      <div 
+        draggable
+        onDragStart={handleDragStart}
+        onMouseEnter={() => setIsHovered(true)}
+        onMouseLeave={() => { setIsHovered(false); setShowMenu(false); }}
+        style={{
+          padding: '16px', borderRadius: '16px', marginBottom: '16px',
+          position: 'relative', transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)', 
+          backgroundColor: 'var(--color-surface)',
+          cursor: 'grab', border: '1px solid var(--color-border)',
+          borderLeft: `4px solid var(--color-primary)`,
+          boxShadow: isHovered ? 'var(--shadow-md)' : 'var(--shadow-sm)',
+          transform: isHovered ? 'translateY(-4px)' : 'none'
+        }}
+        onDrag={(e) => e.currentTarget.style.borderColor = 'var(--color-success)'}
+        onDragEnd={(e) => e.currentTarget.style.borderColor = 'var(--color-border)'}
+      >
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+          <div>
+            <h4 style={{ margin: '0 0 6px 0', fontSize: '1rem', fontWeight: 600, color: 'var(--color-text-main)' }}>
+              <Link to={`/tasks/${task.id}`} style={{ textDecoration: 'none', color: 'var(--color-text-main)' }}>
+                {task.title}
+              </Link>
+            </h4>
+            <p style={{ margin: '0 0 12px 0', fontSize: '0.8125rem', color: '#9CA3AF' }}>
+              #CF-{task.id.slice(0, 3).toUpperCase() || '104'}
+            </p>
+          </div>
+          
+          <div style={{ position: 'relative' }}>
+            {(isHovered || showMenu) && (
+              <button onClick={() => setShowMenu(!showMenu)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#9CA3AF' }}>
+                <MoreVertical size={16} />
+              </button>
+            )}
+            
+            {showMenu && (
+              <div style={{ 
+                position: 'absolute', right: 0, top: '24px', background: 'var(--color-surface)', 
+                boxShadow: 'var(--shadow-md)', borderRadius: 'var(--radius-sm)', zIndex: 10,
+                border: '1px solid var(--color-border)', width: '150px', overflow: 'hidden'
+              }}>
+                <div style={{ padding: '8px', fontSize: '0.75rem', fontWeight: 600, color: 'var(--color-text-muted)', borderBottom: '1px solid var(--color-border)' }}>Move to...</div>
+                {columns.filter(c => c.id !== task.columnId).map(col => (
+                  <button key={col.id} onClick={() => { moveTask(task.id, col.id); setShowMenu(false); }} 
+                    style={{ display: 'block', width: '100%', padding: '8px', textAlign: 'left', border: 'none', background: 'none', cursor: 'pointer', fontSize: '0.875rem' }}>
+                    {col.name}
+                  </button>
+                ))}
+                {isOwner && (
+                  <div style={{ borderTop: '1px solid var(--color-border)' }}>
+                    <button onClick={() => { setShowMenu(false); setShowDeleteConfirm(true); }} 
+                      style={{ display: 'block', width: '100%', padding: '8px', textAlign: 'left', border: 'none', background: 'none', cursor: 'pointer', color: 'var(--color-danger)', fontSize: '0.875rem' }}>
+                      Delete Task
+                    </button>
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+        </div>
+        
+        {task.description && (
+          <div style={{ 
+            fontSize: '0.875rem', 
+            color: 'var(--color-text-muted)', 
+            marginBottom: '16px',
+            display: '-webkit-box',
+            WebkitLineClamp: 4,
+            WebkitBoxOrient: 'vertical',
+            overflow: 'hidden'
+          }}>
+            {task.description}
+          </div>
+        )}
+        
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          {task.dueDate ? (
+            <div style={{ 
+              display: 'flex', alignItems: 'center', gap: '4px',
+              backgroundColor: isOverdue ? '#FEE2E2' : '#D1FAE5', 
+              color: isOverdue ? '#DC2626' : '#059669', 
+              padding: '4px 10px', 
+              borderRadius: '16px', fontSize: '0.75rem', fontWeight: 500 
+            }}>
+              <Calendar size={14} />
+              {new Date(task.dueDate).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}
+            </div>
+          ) : (
+            <div />
+          )}
+          <div style={{ display: 'flex', alignItems: 'center' }}>
+            {assignees.length === 0 ? (
+              <div style={{ width: '28px', height: '28px', borderRadius: '50%', backgroundColor: '#E5E7EB', color: '#374151', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.625rem', fontWeight: 600, border: '1px solid #FFFFFF' }}>
+                ??
+              </div>
+            ) : (
+              assignees.slice(0, 3).map((a, i) => (
+                <div key={a.id} style={{ 
+                  width: '28px', height: '28px', borderRadius: '50%', 
+                  backgroundColor: getAvatarColor(a.name), color: '#FFFFFF',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  fontSize: '0.625rem', fontWeight: 600, border: '1px solid #FFFFFF',
+                  marginLeft: i > 0 ? '-8px' : '0', zIndex: 10 - i
+                }} title={a.name}>
+                  {a.name.split(' ').map(n=>n[0]).join('').toUpperCase()}
+                </div>
+              ))
+            )}
+            {assignees.length > 3 && (
+              <div style={{ width: '28px', height: '28px', borderRadius: '50%', backgroundColor: '#F3F4F6', color: '#6B7280', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.625rem', fontWeight: 600, border: '1px solid #FFFFFF', marginLeft: '-8px', zIndex: 1 }}>
+                +{assignees.length - 3}
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+
+      {showDeleteConfirm && (
+        <ConfirmDialog 
+          title="Delete Task" 
+          message={`Are you sure you want to delete "${task.title}"?`}
+          onConfirm={handleDelete}
+          onCancel={() => setShowDeleteConfirm(false)}
+        />
+      )}
+    </>
+  );
+}
