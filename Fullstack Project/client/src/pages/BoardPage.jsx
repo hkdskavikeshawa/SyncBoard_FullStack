@@ -5,13 +5,8 @@ import Board from '../components/Board';
 import LoadingState from '../components/LoadingState';
 import ErrorState from '../components/ErrorState';
 import EmptyState from '../components/EmptyState';
-import { Plus, Search, Filter, ChevronDown, LogOut, Pencil, Trash2 } from 'lucide-react';
-<<<<<<< HEAD
+import { Plus, Search, ChevronDown, LogOut, Pencil, Trash2 } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
-=======
-import { Link } from 'react-router-dom';
->>>>>>> origin/main
-import { simulateNextFailure } from '../api/tasks';
 import CreateBoardDialog from '../components/CreateBoardDialog';
 import InviteMemberDialog from '../components/InviteMemberDialog';
 import PromptDialog from '../components/PromptDialog';
@@ -20,10 +15,7 @@ import { useAuth } from '../context/AuthContext';
 export default function BoardPage() {
   const { boards, activeBoardId, setActiveBoard, tasks, members, columns, status, error, loadInitial, loadBoardData, updateBoard, removeBoard, isOwner } = useTasks();
   const { user, logout } = useAuth();
-<<<<<<< HEAD
   const navigate = useNavigate();
-=======
->>>>>>> origin/main
   const [filters, setFilters] = useState({ search: '', assignee: '', status: '' });
   const [showBoardSelector, setShowBoardSelector] = useState(false);
   const [showCreateBoard, setShowCreateBoard] = useState(false);
@@ -33,12 +25,7 @@ export default function BoardPage() {
   const activeBoard = boards.find(b => b.id === activeBoardId);
 
   const handleTestError = () => {
-<<<<<<< HEAD
     navigate('/404-test');
-=======
-    simulateNextFailure();
-    loadBoardData(activeBoardId);
->>>>>>> origin/main
   };
 
   const handleRenameBoardConfirm = (newName) => {
@@ -55,20 +42,15 @@ export default function BoardPage() {
   };
 
   if (status === 'loading' || status === 'idle') return <LoadingState />;
-  if (status === 'error') return <ErrorState message={error} onRetry={load} />;
+  if (status === 'error') return <ErrorState message={error} onRetry={loadInitial} />;
 
   const visibleTasks = applyFilters(tasks, filters);
-  
+
   const header = (
     <div className="glass-panel" style={{ position: 'relative', zIndex: 10, display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px', padding: '16px 24px', borderRadius: 'var(--radius-lg)' }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
-<<<<<<< HEAD
         <img src="/logo.png" alt="CodeForge" style={{ height: '64px' }} />
         <div style={{ width: '1px', height: '48px', backgroundColor: 'var(--color-border)' }}></div>
-=======
-        <img src="/logo.png" alt="CodeForge" style={{ height: '32px' }} />
-        <div style={{ width: '1px', height: '24px', backgroundColor: 'var(--color-border)' }}></div>
->>>>>>> origin/main
         <div style={{ position: 'relative' }}>
           <button 
             className="btn btn-outline" 
