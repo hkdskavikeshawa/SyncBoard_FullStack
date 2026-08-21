@@ -3,6 +3,7 @@ import { TasksProvider } from './context/TasksContext';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import BoardPage from './pages/BoardPage';
 import TaskDetailPage from './pages/TaskDetailPage';
+import AnalyticsPage from './pages/AnalyticsPage';
 import NotFoundPage from './pages/NotFoundPage';
 import LoginPage from './pages/LoginPage';
 import RegisterPage from './pages/RegisterPage';
@@ -24,6 +25,11 @@ export default function App() {
             <Route path="/" element={
               <ProtectedRoute>
                 <BoardPage />
+              </ProtectedRoute>
+            } />
+            <Route path="/analytics" element={
+              <ProtectedRoute>
+                <AnalyticsPage />
               </ProtectedRoute>
             } />
             <Route path="/tasks/:id" element={
