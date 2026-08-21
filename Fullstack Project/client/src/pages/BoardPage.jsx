@@ -1,11 +1,11 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useTasks } from '../hooks/useTasks';
 import { applyFilters } from '../utils/filters';
 import Board from '../components/Board';
 import LoadingState from '../components/LoadingState';
 import ErrorState from '../components/ErrorState';
 import EmptyState from '../components/EmptyState';
-import { Plus, Search, ChevronDown, LogOut, Pencil, Trash2 } from 'lucide-react';
+import { Plus, Search, ChevronDown, LogOut, Pencil, Trash2, Sun, Moon } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import CreateBoardDialog from '../components/CreateBoardDialog';
 import InviteMemberDialog from '../components/InviteMemberDialog';
@@ -21,12 +21,17 @@ export default function BoardPage() {
   const [showCreateBoard, setShowCreateBoard] = useState(false);
   const [showInviteDialog, setShowInviteDialog] = useState(false);
   const [showRenameBoard, setShowRenameBoard] = useState(false);
+  const [darkMode, setDarkMode] = useState(() => localStorage.getItem('theme') === 'dark');
 
-  const activeBoard = boards.find(b => b.id === activeBoardId);
-
-  const handleTestError = () => {
-    navigate('/404-test');
-  };
+  useEffect(() => {
+    if (darkMode) {
+      document.body.classList.add('dark-theme');
+      localStorage.setItem('theme', 'dark');
+    } else {
+      document.body.classList.remove('dark-theme');
+      localStorage.setItem('theme', 'light');
+    }
+  }, [darkMode]);
 
   const handleRenameBoardConfirm = (newName) => {
     if (newName && newName !== activeBoard.name) {
@@ -108,8 +113,13 @@ export default function BoardPage() {
       </div>
       
       <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
-        <button onClick={handleTestError} className="btn btn-outline" style={{ padding: '8px 12px', color: 'var(--color-danger)', borderColor: 'var(--color-danger)', fontSize: '0.75rem' }} title="Trigger Network Error">
-          Test Error
+        <button 
+          onClick={() => setDarkMode(!darkMode)} 
+          className="btn btn-outline" 
+          style={{ padding: '8px', border: '1px solid var(--color-border)', borderRadius: '50%', color: 'var(--color-text-main)' }} 
+          title={darkMode ? "Switch to Light Mode" : "Switch to Dark Mode"}
+        >
+          {darkMode ? <Sun size={18} /> : <Moon size={18} />}
         </button>
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
           <div style={{ position: 'relative' }}>
