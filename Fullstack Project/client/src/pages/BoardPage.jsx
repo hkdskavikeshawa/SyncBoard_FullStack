@@ -13,6 +13,7 @@ import PromptDialog from '../components/PromptDialog';
 import QuickStatsBar from '../components/QuickStatsBar';
 import ListView from '../components/ListView';
 import ActivityFeedDrawer from '../components/ActivityFeedDrawer';
+import Navbar from '../components/Navbar';
 import { useAuth } from '../context/AuthContext';
 
 export default function BoardPage() {
@@ -27,6 +28,8 @@ export default function BoardPage() {
   const [showActivityDrawer, setShowActivityDrawer] = useState(false);
   const [darkMode, setDarkMode] = useState(() => localStorage.getItem('theme') === 'dark');
   const [viewMode, setViewMode] = useState('board');
+
+  const activeBoard = (boards || []).find(b => b.id === activeBoardId);
 
   useEffect(() => {
     if (darkMode) {
@@ -192,21 +195,13 @@ export default function BoardPage() {
             <Plus size={16} /> New Task
           </Link>
         )}
-        <div style={{ width: '1px', height: '24px', backgroundColor: 'var(--color-border)', margin: '0 8px' }}></div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-          <div style={{ width: '32px', height: '32px', borderRadius: '50%', backgroundColor: 'var(--color-primary)', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 600, fontSize: '0.875rem' }}>
-            {user.name.charAt(0).toUpperCase()}
-          </div>
-          <button onClick={logout} className="btn btn-outline" style={{ padding: '8px', border: 'none' }} title="Logout">
-            <LogOut size={16} />
-          </button>
-        </div>
       </div>
     </div>
   );
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', height: '100vh', padding: '24px', backgroundColor: 'var(--color-background)', overflowY: 'auto' }}>
+      <Navbar onOpenActivity={() => setShowActivityDrawer(true)} />
       {header}
       <QuickStatsBar tasks={tasks} columns={columns} members={members} />
       
