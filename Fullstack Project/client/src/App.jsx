@@ -5,6 +5,7 @@ import BoardPage from './pages/BoardPage';
 import TaskDetailPage from './pages/TaskDetailPage';
 import AnalyticsPage from './pages/AnalyticsPage';
 import CalendarPage from './pages/CalendarPage';
+import TeamPage from './pages/TeamPage';
 import NotFoundPage from './pages/NotFoundPage';
 import LoginPage from './pages/LoginPage';
 import RegisterPage from './pages/RegisterPage';
@@ -36,6 +37,11 @@ export default function App() {
             <Route path="/calendar" element={
               <ProtectedRoute>
                 <CalendarPage />
+              </ProtectedRoute>
+            } />
+            <Route path="/team" element={
+              <ProtectedRoute>
+                <TeamPage />
               </ProtectedRoute>
             } />
             <Route path="/tasks/:id" element={
