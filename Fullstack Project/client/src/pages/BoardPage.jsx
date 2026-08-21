@@ -5,12 +5,13 @@ import Board from '../components/Board';
 import LoadingState from '../components/LoadingState';
 import ErrorState from '../components/ErrorState';
 import EmptyState from '../components/EmptyState';
-import { Plus, Search, ChevronDown, LogOut, Pencil, Trash2, Sun, Moon } from 'lucide-react';
+import { Plus, Search, ChevronDown, LogOut, Pencil, Trash2, Sun, Moon, LayoutGrid, List } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import CreateBoardDialog from '../components/CreateBoardDialog';
 import InviteMemberDialog from '../components/InviteMemberDialog';
 import PromptDialog from '../components/PromptDialog';
 import QuickStatsBar from '../components/QuickStatsBar';
+import ListView from '../components/ListView';
 import { useAuth } from '../context/AuthContext';
 
 export default function BoardPage() {
@@ -23,6 +24,7 @@ export default function BoardPage() {
   const [showInviteDialog, setShowInviteDialog] = useState(false);
   const [showRenameBoard, setShowRenameBoard] = useState(false);
   const [darkMode, setDarkMode] = useState(() => localStorage.getItem('theme') === 'dark');
+  const [viewMode, setViewMode] = useState('board');
 
   useEffect(() => {
     if (darkMode) {
@@ -122,6 +124,23 @@ export default function BoardPage() {
         >
           {darkMode ? <Sun size={18} /> : <Moon size={18} />}
         </button>
+
+        <div style={{ display: 'flex', border: '1px solid var(--color-border)', borderRadius: 'var(--radius-sm)', overflow: 'hidden', padding: '2px', backgroundColor: 'var(--color-surface)' }}>
+          <button 
+            onClick={() => setViewMode('board')} 
+            style={{ padding: '6px 10px', border: 'none', background: viewMode === 'board' ? 'var(--color-primary)' : 'transparent', color: viewMode === 'board' ? 'white' : 'var(--color-text-muted)', borderRadius: '4px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px', fontSize: '0.8rem', fontWeight: 500 }}
+            title="Kanban Board View"
+          >
+            <LayoutGrid size={15} /> Board
+          </button>
+          <button 
+            onClick={() => setViewMode('list')} 
+            style={{ padding: '6px 10px', border: 'none', background: viewMode === 'list' ? 'var(--color-primary)' : 'transparent', color: viewMode === 'list' ? 'white' : 'var(--color-text-muted)', borderRadius: '4px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px', fontSize: '0.8rem', fontWeight: 500 }}
+            title="Table List View"
+          >
+            <List size={15} /> List
+          </button>
+        </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
           <div style={{ position: 'relative' }}>
             <select 
@@ -196,6 +215,8 @@ export default function BoardPage() {
             />
           ) : visibleTasks.length === 0 ? (
             <EmptyState title="No tasks match your filters" subtitle="Try adjusting your search criteria." />
+          ) : viewMode === 'list' ? (
+            <ListView tasks={visibleTasks} />
           ) : (
             <Board tasks={visibleTasks} />
           )}
