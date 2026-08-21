@@ -10,6 +10,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import CreateBoardDialog from '../components/CreateBoardDialog';
 import InviteMemberDialog from '../components/InviteMemberDialog';
 import PromptDialog from '../components/PromptDialog';
+import QuickStatsBar from '../components/QuickStatsBar';
 import { useAuth } from '../context/AuthContext';
 
 export default function BoardPage() {
@@ -175,8 +176,9 @@ export default function BoardPage() {
   );
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', height: '100vh', padding: '24px', backgroundColor: 'var(--color-background)' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', height: '100vh', padding: '24px', backgroundColor: 'var(--color-background)', overflowY: 'auto' }}>
       {header}
+      <QuickStatsBar tasks={tasks} columns={columns} members={members} />
       
       <div style={{ display: 'flex', flex: 1, overflow: 'hidden' }}>
         <div style={{ flex: 1, overflowX: 'auto' }}>
