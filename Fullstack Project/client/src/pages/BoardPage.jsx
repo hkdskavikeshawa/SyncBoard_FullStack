@@ -60,14 +60,12 @@ export default function BoardPage() {
   const visibleTasks = applyFilters(tasks, filters);
 
   const header = (
-    <div className="glass-panel" style={{ position: 'relative', zIndex: 10, display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px', padding: '16px 24px', borderRadius: 'var(--radius-lg)' }}>
+    <div className="glass-panel" style={{ position: 'relative', zIndex: 10, display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px', padding: '12px 20px', borderRadius: 'var(--radius-lg)' }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
-        <img src="/logo.png" alt="CodeForge" style={{ height: '64px' }} />
-        <div style={{ width: '1px', height: '48px', backgroundColor: 'var(--color-border)' }}></div>
         <div style={{ position: 'relative' }}>
           <button 
             className="btn btn-outline" 
-            style={{ padding: '8px 12px', display: 'flex', alignItems: 'center', gap: '8px', border: 'none', background: 'transparent' }}
+            style={{ padding: '8px 12px', display: 'flex', alignItems: 'center', gap: '8px', border: '1px solid var(--color-border)' }}
             onClick={() => setShowBoardSelector(!showBoardSelector)}
           >
             <span style={{ fontWeight: 600 }}>{activeBoard ? activeBoard.name : 'Select Board'}</span>
@@ -121,23 +119,6 @@ export default function BoardPage() {
       </div>
       
       <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
-        <button 
-          onClick={() => setDarkMode(!darkMode)} 
-          className="btn btn-outline" 
-          style={{ padding: '8px', border: '1px solid var(--color-border)', borderRadius: '50%', color: 'var(--color-text-main)' }} 
-          title={darkMode ? "Switch to Light Mode" : "Switch to Dark Mode"}
-        >
-          {darkMode ? <Sun size={18} /> : <Moon size={18} />}
-        </button>
-
-        <button 
-          onClick={() => setShowActivityDrawer(true)} 
-          className="btn btn-outline" 
-          style={{ padding: '8px', border: '1px solid var(--color-border)', borderRadius: '50%', color: 'var(--color-text-main)' }} 
-          title="Activity Log & Export Data"
-        >
-          <History size={18} />
-        </button>
 
         <div style={{ display: 'flex', border: '1px solid var(--color-border)', borderRadius: 'var(--radius-sm)', overflow: 'hidden', padding: '2px', backgroundColor: 'var(--color-surface)' }}>
           <button 
