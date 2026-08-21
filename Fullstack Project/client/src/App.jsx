@@ -9,6 +9,7 @@ import TeamPage from './pages/TeamPage';
 import NotFoundPage from './pages/NotFoundPage';
 import LoginPage from './pages/LoginPage';
 import RegisterPage from './pages/RegisterPage';
+import ProfilePage from './pages/ProfilePage';
 
 function ProtectedRoute({ children }) {
   const { user } = useAuth();
@@ -42,6 +43,11 @@ export default function App() {
             <Route path="/team" element={
               <ProtectedRoute>
                 <TeamPage />
+              </ProtectedRoute>
+            } />
+            <Route path="/profile" element={
+              <ProtectedRoute>
+                <ProfilePage />
               </ProtectedRoute>
             } />
             <Route path="/tasks/:id" element={
