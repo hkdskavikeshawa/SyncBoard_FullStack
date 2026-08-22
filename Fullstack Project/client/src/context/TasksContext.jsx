@@ -1,6 +1,7 @@
 import { createContext, useReducer, useEffect, useCallback, useContext } from 'react';
 import * as api from '../api/tasks';
 import { useAuth } from './AuthContext';
+import { useNotifications } from './NotificationContext';
 
 export const TasksContext = createContext(null);
 
@@ -49,6 +50,7 @@ function tasksReducer(state, action) {
 export function TasksProvider({ children }) {
   const [state, dispatch] = useReducer(tasksReducer, initialState);
   const { user } = useAuth();
+  const { addNotification } = useNotifications();
 
   // Load initial app data (boards & members)
   const loadInitial = useCallback(async () => {
@@ -99,9 +101,14 @@ export function TasksProvider({ children }) {
     return () => channel.close();
   }, [state.activeBoardId, loadBoardData]);
 
-  const notifySync = () => {
+  const notifySync = (message) => {
     const channel = new BroadcastChannel('collab_board_sync');
     channel.postMessage({ type: 'SYNC', boardId: state.activeBoardId });
+    if (message) {
+      channel.postMessage({ type: 'NOTIFY', message, actor: user?.name || 'Someone' });
+      // Also show locally so single-tab users see their own actions
+      addNotification(message, user?.name || 'You');
+    }
     channel.close();
   };
 
@@ -147,24 +154,28 @@ export function TasksProvider({ children }) {
   };
 
   const addTask = async (input) => {
-    dispatch({ type: 'TASK_ADDED', payload: await api.createTask({ ...input, boardId: state.activeBoardId }) });
-    notifySync();
+    const task = await api.createTask({ ...input, boardId: state.activeBoardId });
+    dispatch({ type: 'TASK_ADDED', payload: task });
+    notifySync(`${user?.name || 'Someone'} created task "${task.title}"`);
   };
 
   const updateTaskDetails = async (id, patch) => {
     dispatch({ type: 'TASK_UPDATED', payload: await api.updateTask(id, patch) });
-    notifySync();
+    notifySync(`${user?.name || 'Someone'} updated task details`);
   };
 
   const moveTask = async (id, columnId) => {
+    const task = state.tasks.find(t => t.id === id);
+    const col = state.columns.find(c => c.id === columnId);
     dispatch({ type: 'TASK_UPDATED', payload: await api.updateTask(id, { columnId }) });
-    notifySync();
+    notifySync(`${user?.name || 'Someone'} moved "${task?.title || 'a task'}" → ${col?.name || columnId}`);
   };
 
   const removeTask = async (id) => {
+    const task = state.tasks.find(t => t.id === id);
     await api.deleteTask(id);
     dispatch({ type: 'TASK_DELETED', id });
-    notifySync();
+    notifySync(`${user?.name || 'Someone'} deleted "${task?.title || 'a task'}"`);
   };
 
   const isOwner = state.boards.find(b => b.id === state.activeBoardId)?.ownerId === user?.id;
