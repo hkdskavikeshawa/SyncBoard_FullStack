@@ -66,9 +66,12 @@ export default function TaskCard({ task }) {
           padding: '16px', borderRadius: '16px', marginBottom: '16px',
           position: 'relative', transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)', 
           backgroundColor: 'var(--color-surface)',
-          cursor: 'grab', border: '1px solid var(--color-border)',
-          borderLeft: `4px solid ${priorityInfo.color}`,
-          boxShadow: isHovered ? 'var(--shadow-md)' : 'var(--shadow-sm)',
+          cursor: 'grab',
+          border: isOverdue ? '1px solid rgba(239,68,68,0.35)' : '1px solid var(--color-border)',
+          borderLeft: `4px solid ${isOverdue ? '#EF4444' : priorityInfo.color}`,
+          boxShadow: isOverdue
+            ? (isHovered ? '0 10px 15px -3px rgba(239,68,68,0.2), 0 0 0 1px rgba(239,68,68,0.15)' : '0 0 0 1px rgba(239,68,68,0.1), 0 2px 8px rgba(239,68,68,0.12)')
+            : (isHovered ? 'var(--shadow-md)' : 'var(--shadow-sm)'),
           transform: isHovered ? 'translateY(-4px)' : 'none'
         }}
         onDrag={(e) => e.currentTarget.style.borderColor = 'var(--color-success)'}
@@ -125,6 +128,16 @@ export default function TaskCard({ task }) {
             )}
           </div>
         </div>
+
+        {/* Overdue Badge */}
+        {isOverdue && (
+          <div style={{ marginBottom: '8px' }}>
+            <span className="overdue-badge">
+              <span className="overdue-badge-dot" />
+              Overdue
+            </span>
+          </div>
+        )}
 
         {/* Task Title & Code */}
         <div>

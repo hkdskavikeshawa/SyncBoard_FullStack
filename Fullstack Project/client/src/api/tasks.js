@@ -10,6 +10,7 @@ const clone = (v) => JSON.parse(JSON.stringify(v));
 let db = clone(seedTasks);
 let cols = clone(seedColumns);
 let brds = clone(seedBoards);
+let commentsStore = []; // { id, taskId, authorId, authorName, text, createdAt }
 
 export class NotFoundError extends Error {}
 
@@ -141,4 +142,23 @@ export async function deleteBoard(id) {
 export async function getMembers() {
   await sleep(100);
   return clone(members);
+}
+
+export async function getComments(taskId) {
+  await sleep(150);
+  return clone(commentsStore.filter(c => c.taskId === taskId));
+}
+
+export async function addComment(taskId, { text, authorId, authorName }) {
+  await sleep(200);
+  const comment = {
+    id: crypto.randomUUID(),
+    taskId,
+    authorId,
+    authorName,
+    text,
+    createdAt: new Date().toISOString(),
+  };
+  commentsStore = [...commentsStore, comment];
+  return clone(comment);
 }

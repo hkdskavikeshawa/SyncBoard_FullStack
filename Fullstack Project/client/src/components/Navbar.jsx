@@ -2,6 +2,7 @@ import { Link, useLocation } from 'react-router-dom';
 import { LayoutGrid, BarChart2, Calendar, Users, Sun, Moon, LogOut, History } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useState, useEffect, useRef } from 'react';
+import NotificationBell from './NotificationBell';
 
 export default function Navbar({ onOpenActivity }) {
   const { user, logout } = useAuth();
@@ -99,6 +100,9 @@ export default function Navbar({ onOpenActivity }) {
             <History size={18} />
           </button>
         )}
+
+        {/* Notification Bell */}
+        <NotificationBell />
 
         <div style={{ width: '1px', height: '24px', backgroundColor: 'var(--color-border)', margin: '0 4px' }}></div>
 
