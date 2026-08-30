@@ -1,68 +1,52 @@
-const DELAY = 500;
-const sleep = (ms) => new Promise((res) => setTimeout(res, ms));
+const API_BASE_URL = 'http://localhost:5000/api';
 
-// Mock database for users stored in localStorage to persist across tabs
-const getUsers = () => {
-  const users = JSON.parse(localStorage.getItem('users') || '[]');
-  if (users.length === 0) {
-    // Seed a default demo user
-    const demoUser = { id: 'u1', name: 'Demo User', email: 'demo@example.com', password: 'password123' };
-    users.push(demoUser);
-    localStorage.setItem('users', JSON.stringify(users));
+const getHeaders = (token) => {
+  const headers = { 'Content-Type': 'application/json' };
+  const authToken = token || localStorage.getItem('token');
+  if (authToken) {
+    headers['Authorization'] = `Bearer ${authToken}`;
   }
-  return users;
+  return headers;
 };
-const saveUsers = (users) => localStorage.setItem('users', JSON.stringify(users));
 
 export async function login(email, password) {
-  await sleep(DELAY);
-  const users = getUsers();
-  const user = users.find(u => u.email === email && u.password === password);
-  
-  if (!user) {
-    throw new Error('Invalid email or password');
+  const response = await fetch(`${API_BASE_URL}/auth/login`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ email, password }),
+  });
+
+  const data = await response.json();
+
+  if (!response.ok) {
+    throw new Error(data.message || 'Invalid email or password');
   }
 
-  // Generate a mock JWT
-  const token = btoa(JSON.stringify({ id: user.id, email: user.email, name: user.name, exp: Date.now() + 86400000 }));
-  
-  return {
-    user: { id: user.id, email: user.email, name: user.name },
-    token
-  };
+  return data;
 }
 
 export async function register(name, email, password) {
-  await sleep(DELAY);
-  const users = getUsers();
-  
-  if (users.some(u => u.email === email)) {
-    throw new Error('User with this email already exists');
+  const response = await fetch(`${API_BASE_URL}/auth/register`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ name, email, password }),
+  });
+
+  const data = await response.json();
+
+  if (!response.ok) {
+    throw new Error(data.message || 'Registration failed');
   }
 
-  const newUser = {
-    id: crypto.randomUUID(),
-    name,
-    email,
-    password // Storing plaintext only because this is a mock frontend-only system!
-  };
-
-  users.push(newUser);
-  saveUsers(users);
-
-  const token = btoa(JSON.stringify({ id: newUser.id, email: newUser.email, name: newUser.name, exp: Date.now() + 86400000 }));
-
-  return {
-    user: { id: newUser.id, email: newUser.email, name: newUser.name },
-    token
-  };
+  return data;
 }
 
 export function getCurrentUser(token) {
-  if (!token) return null;
+  const authToken = token || localStorage.getItem('token');
+  if (!authToken) return null;
   try {
-    const payload = JSON.parse(atob(token));
-    if (payload.exp < Date.now()) return null; // Expired
+    const payload = JSON.parse(atob(authToken.split('.')[1]));
+    if (payload.exp && payload.exp * 1000 < Date.now()) return null; // Expired
     return { id: payload.id, email: payload.email, name: payload.name };
   } catch (e) {
     return null;
@@ -70,9 +54,15 @@ export function getCurrentUser(token) {
 }
 
 export async function getUserByEmail(email) {
-  await sleep(100);
-  const users = getUsers();
-  const user = users.find(u => u.email === email);
-  if (!user) throw new Error('User not found');
-  return { id: user.id, name: user.name, email: user.email };
+  const response = await fetch(`${API_BASE_URL}/auth/user?email=${encodeURIComponent(email)}`, {
+    headers: getHeaders(),
+  });
+
+  const data = await response.json();
+
+  if (!response.ok) {
+    throw new Error(data.message || 'User not found');
+  }
+
+  return data;
 }
