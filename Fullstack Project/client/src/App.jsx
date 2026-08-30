@@ -1,11 +1,17 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { TasksProvider } from './context/TasksContext';
 import { AuthProvider, useAuth } from './context/AuthContext';
+import { NotificationProvider } from './context/NotificationContext';
 import BoardPage from './pages/BoardPage';
 import TaskDetailPage from './pages/TaskDetailPage';
+import AnalyticsPage from './pages/AnalyticsPage';
+import CalendarPage from './pages/CalendarPage';
+import TeamPage from './pages/TeamPage';
 import NotFoundPage from './pages/NotFoundPage';
 import LoginPage from './pages/LoginPage';
 import RegisterPage from './pages/RegisterPage';
+import ProfilePage from './pages/ProfilePage';
+import ToastNotification from './components/ToastNotification';
 
 function ProtectedRoute({ children }) {
   const { user } = useAuth();
@@ -17,23 +23,46 @@ export default function App() {
   return (
     <BrowserRouter>
       <AuthProvider>
-        <TasksProvider>
-          <Routes>
-            <Route path="/login" element={<LoginPage />} />
-            <Route path="/register" element={<RegisterPage />} />
-            <Route path="/" element={
-              <ProtectedRoute>
-                <BoardPage />
-              </ProtectedRoute>
-            } />
-            <Route path="/tasks/:id" element={
-              <ProtectedRoute>
-                <TaskDetailPage />
-              </ProtectedRoute>
-            } />
-            <Route path="*" element={<NotFoundPage />} />
-          </Routes>
-        </TasksProvider>
+        <NotificationProvider>
+          <TasksProvider>
+            <Routes>
+              <Route path="/login" element={<LoginPage />} />
+              <Route path="/register" element={<RegisterPage />} />
+              <Route path="/" element={
+                <ProtectedRoute>
+                  <BoardPage />
+                </ProtectedRoute>
+              } />
+              <Route path="/analytics" element={
+                <ProtectedRoute>
+                  <AnalyticsPage />
+                </ProtectedRoute>
+              } />
+              <Route path="/calendar" element={
+                <ProtectedRoute>
+                  <CalendarPage />
+                </ProtectedRoute>
+              } />
+              <Route path="/team" element={
+                <ProtectedRoute>
+                  <TeamPage />
+                </ProtectedRoute>
+              } />
+              <Route path="/profile" element={
+                <ProtectedRoute>
+                  <ProfilePage />
+                </ProtectedRoute>
+              } />
+              <Route path="/tasks/:id" element={
+                <ProtectedRoute>
+                  <TaskDetailPage />
+                </ProtectedRoute>
+              } />
+              <Route path="*" element={<NotFoundPage />} />
+            </Routes>
+            <ToastNotification />
+          </TasksProvider>
+        </NotificationProvider>
       </AuthProvider>
     </BrowserRouter>
   );

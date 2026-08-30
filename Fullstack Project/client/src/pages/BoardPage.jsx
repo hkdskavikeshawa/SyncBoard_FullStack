@@ -1,33 +1,45 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useTasks } from '../hooks/useTasks';
 import { applyFilters } from '../utils/filters';
 import Board from '../components/Board';
 import LoadingState from '../components/LoadingState';
 import ErrorState from '../components/ErrorState';
 import EmptyState from '../components/EmptyState';
-import { Plus, Search, Filter, ChevronDown, LogOut, Pencil, Trash2 } from 'lucide-react';
-import { Link } from 'react-router-dom';
-import { simulateNextFailure } from '../api/tasks';
+import { Plus, Search, ChevronDown, LogOut, Pencil, Trash2, Sun, Moon, LayoutGrid, List, History } from 'lucide-react';
+import { Link, useNavigate } from 'react-router-dom';
 import CreateBoardDialog from '../components/CreateBoardDialog';
 import InviteMemberDialog from '../components/InviteMemberDialog';
 import PromptDialog from '../components/PromptDialog';
+import QuickStatsBar from '../components/QuickStatsBar';
+import ListView from '../components/ListView';
+import ActivityFeedDrawer from '../components/ActivityFeedDrawer';
+import Navbar from '../components/Navbar';
 import { useAuth } from '../context/AuthContext';
 
 export default function BoardPage() {
   const { boards, activeBoardId, setActiveBoard, tasks, members, columns, status, error, loadInitial, loadBoardData, updateBoard, removeBoard, isOwner } = useTasks();
   const { user, logout } = useAuth();
+  const navigate = useNavigate();
   const [filters, setFilters] = useState({ search: '', assignee: '', status: '' });
   const [showBoardSelector, setShowBoardSelector] = useState(false);
   const [showCreateBoard, setShowCreateBoard] = useState(false);
   const [showInviteDialog, setShowInviteDialog] = useState(false);
   const [showRenameBoard, setShowRenameBoard] = useState(false);
+  const [showActivityDrawer, setShowActivityDrawer] = useState(false);
+  const [darkMode, setDarkMode] = useState(() => localStorage.getItem('theme') === 'dark');
+  const [viewMode, setViewMode] = useState('board');
 
-  const activeBoard = boards.find(b => b.id === activeBoardId);
+  const activeBoard = (boards || []).find(b => b.id === activeBoardId);
 
-  const handleTestError = () => {
-    simulateNextFailure();
-    loadBoardData(activeBoardId);
-  };
+  useEffect(() => {
+    if (darkMode) {
+      document.body.classList.add('dark-theme');
+      localStorage.setItem('theme', 'dark');
+    } else {
+      document.body.classList.remove('dark-theme');
+      localStorage.setItem('theme', 'light');
+    }
+  }, [darkMode]);
 
   const handleRenameBoardConfirm = (newName) => {
     if (newName && newName !== activeBoard.name) {
@@ -43,19 +55,17 @@ export default function BoardPage() {
   };
 
   if (status === 'loading' || status === 'idle') return <LoadingState />;
-  if (status === 'error') return <ErrorState message={error} onRetry={load} />;
+  if (status === 'error') return <ErrorState message={error} onRetry={loadInitial} />;
 
   const visibleTasks = applyFilters(tasks, filters);
-  
+
   const header = (
-    <div className="glass-panel" style={{ position: 'relative', zIndex: 10, display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px', padding: '16px 24px', borderRadius: 'var(--radius-lg)' }}>
+    <div className="glass-panel" style={{ position: 'relative', zIndex: 10, display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px', padding: '12px 20px', borderRadius: 'var(--radius-lg)' }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
-        <img src="/logo.png" alt="CodeForge" style={{ height: '32px' }} />
-        <div style={{ width: '1px', height: '24px', backgroundColor: 'var(--color-border)' }}></div>
         <div style={{ position: 'relative' }}>
           <button 
             className="btn btn-outline" 
-            style={{ padding: '8px 12px', display: 'flex', alignItems: 'center', gap: '8px', border: 'none', background: 'transparent' }}
+            style={{ padding: '8px 12px', display: 'flex', alignItems: 'center', gap: '8px', border: '1px solid var(--color-border)' }}
             onClick={() => setShowBoardSelector(!showBoardSelector)}
           >
             <span style={{ fontWeight: 600 }}>{activeBoard ? activeBoard.name : 'Select Board'}</span>
@@ -109,9 +119,23 @@ export default function BoardPage() {
       </div>
       
       <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
-        <button onClick={handleTestError} className="btn btn-outline" style={{ padding: '8px 12px', color: 'var(--color-danger)', borderColor: 'var(--color-danger)', fontSize: '0.75rem' }} title="Trigger Network Error">
-          Test Error
-        </button>
+
+        <div style={{ display: 'flex', border: '1px solid var(--color-border)', borderRadius: 'var(--radius-sm)', overflow: 'hidden', padding: '2px', backgroundColor: 'var(--color-surface)' }}>
+          <button 
+            onClick={() => setViewMode('board')} 
+            style={{ padding: '6px 10px', border: 'none', background: viewMode === 'board' ? 'var(--color-primary)' : 'transparent', color: viewMode === 'board' ? 'white' : 'var(--color-text-muted)', borderRadius: '4px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px', fontSize: '0.8rem', fontWeight: 500 }}
+            title="Kanban Board View"
+          >
+            <LayoutGrid size={15} /> Board
+          </button>
+          <button 
+            onClick={() => setViewMode('list')} 
+            style={{ padding: '6px 10px', border: 'none', background: viewMode === 'list' ? 'var(--color-primary)' : 'transparent', color: viewMode === 'list' ? 'white' : 'var(--color-text-muted)', borderRadius: '4px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px', fontSize: '0.8rem', fontWeight: 500 }}
+            title="Table List View"
+          >
+            <List size={15} /> List
+          </button>
+        </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
           <div style={{ position: 'relative' }}>
             <select 
@@ -152,22 +176,15 @@ export default function BoardPage() {
             <Plus size={16} /> New Task
           </Link>
         )}
-        <div style={{ width: '1px', height: '24px', backgroundColor: 'var(--color-border)', margin: '0 8px' }}></div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-          <div style={{ width: '32px', height: '32px', borderRadius: '50%', backgroundColor: 'var(--color-primary)', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 600, fontSize: '0.875rem' }}>
-            {user.name.charAt(0).toUpperCase()}
-          </div>
-          <button onClick={logout} className="btn btn-outline" style={{ padding: '8px', border: 'none' }} title="Logout">
-            <LogOut size={16} />
-          </button>
-        </div>
       </div>
     </div>
   );
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', height: '100vh', padding: '24px', backgroundColor: 'var(--color-background)' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', height: '100vh', padding: '24px', backgroundColor: 'var(--color-background)', overflowY: 'auto' }}>
+      <Navbar onOpenActivity={() => setShowActivityDrawer(true)} />
       {header}
+      <QuickStatsBar tasks={tasks} columns={columns} members={members} />
       
       <div style={{ display: 'flex', flex: 1, overflow: 'hidden' }}>
         <div style={{ flex: 1, overflowX: 'auto' }}>
@@ -185,6 +202,8 @@ export default function BoardPage() {
             />
           ) : visibleTasks.length === 0 ? (
             <EmptyState title="No tasks match your filters" subtitle="Try adjusting your search criteria." />
+          ) : viewMode === 'list' ? (
+            <ListView tasks={visibleTasks} />
           ) : (
             <Board tasks={visibleTasks} />
           )}
@@ -223,6 +242,13 @@ export default function BoardPage() {
       >
         <Plus size={24} />
       </button>
+      <ActivityFeedDrawer 
+        isOpen={showActivityDrawer} 
+        onClose={() => setShowActivityDrawer(false)} 
+        tasks={tasks} 
+        columns={columns} 
+        boardName={activeBoard?.name} 
+      />
     </div>
   );
 }

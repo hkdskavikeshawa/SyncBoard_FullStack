@@ -12,16 +12,43 @@ export function AuthProvider({ children }) {
     const currentUser = authApi.getCurrentUser(token);
     
     if (currentUser) {
-      setUser(currentUser);
+      const savedProfile = localStorage.getItem(`user_profile_${currentUser.id}`);
+      if (savedProfile) {
+        try {
+          const parsed = JSON.parse(savedProfile);
+          setUser({ ...currentUser, ...parsed });
+        } catch (e) {
+          setUser(currentUser);
+        }
+      } else {
+        setUser(currentUser);
+      }
     } else {
       localStorage.removeItem('token');
     }
     setLoading(false);
   }, []);
 
+  const updateUser = (updatedFields) => {
+    setUser((prev) => {
+      if (!prev) return prev;
+      const nextUser = { ...prev, ...updatedFields };
+      localStorage.setItem(`user_profile_${prev.id}`, JSON.stringify(nextUser));
+      return nextUser;
+    });
+  };
+
   const login = async (email, password) => {
     const data = await authApi.login(email, password);
     localStorage.setItem('token', data.token);
+    const savedProfile = localStorage.getItem(`user_profile_${data.user.id}`);
+    if (savedProfile) {
+      try {
+        const parsed = JSON.parse(savedProfile);
+        setUser({ ...data.user, ...parsed });
+        return;
+      } catch (e) {}
+    }
     setUser(data.user);
   };
 
@@ -41,7 +68,7 @@ export function AuthProvider({ children }) {
   }
 
   return (
-    <AuthContext.Provider value={{ user, login, register, logout }}>
+    <AuthContext.Provider value={{ user, login, register, logout, updateUser }}>
       {children}
     </AuthContext.Provider>
   );

@@ -6,6 +6,7 @@
   --color-primary-hover: #115E59;
   --color-secondary: #38BDF8;
   --color-background: #F8FAFC;
+  --color-bg: var(--color-background);
   --color-surface: #FFFFFF;
   --color-text-main: #1E293B;
   --color-text-muted: #64748B;
@@ -33,6 +34,7 @@
 
 body.dark-theme {
   --color-background: #0F172A;
+  --color-bg: #0F172A;
   --color-surface: #1E293B;
   --color-text-main: #F8FAFC;
   --color-text-muted: #94A3B8;
@@ -46,6 +48,22 @@ body.dark-theme .glass-panel {
   background: rgba(30, 41, 59, 0.85);
   border-color: rgba(255, 255, 255, 0.1);
 }
+
+input, select, textarea {
+  background-color: var(--color-surface);
+  color: var(--color-text-main);
+}
+
+::placeholder {
+  color: var(--color-text-muted) !important;
+  opacity: 0.7;
+}
+
+option {
+  background-color: var(--color-surface);
+  color: var(--color-text-main);
+}
+
 
 * {
   box-sizing: border-box;
