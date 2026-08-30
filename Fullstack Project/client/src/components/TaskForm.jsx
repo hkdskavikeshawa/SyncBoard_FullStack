@@ -3,14 +3,17 @@ import { validateTask } from '../utils/validation';
 import { useTasks } from '../hooks/useTasks';
 
 export default function TaskForm({ initialData, onSubmit, onCancel }) {
-  const { members } = useTasks();
+  const { boardMembers, members } = useTasks();
+  const assignableMembers = boardMembers && boardMembers.length > 0 ? boardMembers : members;
+
   const [formData, setFormData] = useState({
     title: initialData?.title || '',
     description: initialData?.description || '',
     dueDate: initialData?.dueDate || '',
+    priority: initialData?.priority || 'medium',
     assigneeIds: initialData?.assigneeIds || []
   });
-  
+
   const [errors, setErrors] = useState({});
 
   const handleChange = (e) => {
@@ -63,20 +66,39 @@ export default function TaskForm({ initialData, onSubmit, onCancel }) {
         />
       </div>
 
-      <div>
-        <label htmlFor="dueDate" className="input-label">Due Date</label>
-        <input 
-          type="date" id="dueDate" name="dueDate" className="input-field"
-          value={formData.dueDate} onChange={handleChange}
-        />
-        {errors.dueDate && <div style={{ color: 'var(--color-danger)', fontSize: '0.75rem', marginTop: '4px' }}>{errors.dueDate}</div>}
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
+        <div>
+          <label htmlFor="dueDate" className="input-label">Due Date</label>
+          <input 
+            type="date" id="dueDate" name="dueDate" className="input-field"
+            value={formData.dueDate} onChange={handleChange}
+          />
+          {errors.dueDate && <div style={{ color: 'var(--color-danger)', fontSize: '0.75rem', marginTop: '4px' }}>{errors.dueDate}</div>}
+        </div>
+
+        <div>
+          <label htmlFor="priority" className="input-label">Priority Level</label>
+          <select 
+            id="priority" 
+            name="priority" 
+            className="input-field"
+            value={formData.priority} 
+            onChange={handleChange}
+            style={{ fontWeight: 600 }}
+          >
+            <option value="urgent">🔴 Urgent</option>
+            <option value="high">🟠 High</option>
+            <option value="medium">🟡 Medium</option>
+            <option value="low">🔵 Low</option>
+          </select>
+        </div>
       </div>
 
       <div>
         <label className="input-label">Assignees</label>
         <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', maxHeight: '150px', overflowY: 'auto', padding: '8px', border: '1px solid var(--color-border)', borderRadius: 'var(--radius-md)' }}>
-          {members.length === 0 && <span style={{ fontSize: '0.875rem', color: 'var(--color-text-muted)' }}>No members available</span>}
-          {members.map(m => (
+          {assignableMembers.length === 0 && <span style={{ fontSize: '0.875rem', color: 'var(--color-text-muted)' }}>No board members available</span>}
+          {assignableMembers.map(m => (
             <label key={m.id} style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', fontSize: '0.875rem' }}>
               <input 
                 type="checkbox" 
