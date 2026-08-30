@@ -1,4 +1,3 @@
-<<<<<<< Dilmith
 import { useRef, useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
@@ -47,25 +46,11 @@ export default function ProfilePage() {
     bio: user?.bio || 'Senior Product Designer leading onboarding and user experience improvements.',
   });
 
-=======
-import { useRef, useState } from 'react';
-import { Link } from 'react-router-dom';
-import { useAuth } from '../context/AuthContext';
-
-export default function ProfilePage() {
-  const { user } = useAuth();
-  const [formData, setFormData] = useState({
-    displayName: user?.name || 'Bethany Parker',
-    email: user?.email || 'bethany@codeforge.io',
-    bio: 'Senior Product Designer leading onboarding and user experience improvements.',
-  });
->>>>>>> main
   const [passwords, setPasswords] = useState({
     currentPassword: '',
     newPassword: '',
     confirmPassword: '',
   });
-<<<<<<< Dilmith
 
   const [twoFactorEnabled, setTwoFactorEnabled] = useState(() => {
     const saved = localStorage.getItem(`user_2fa_${user?.id}`);
@@ -131,17 +116,6 @@ export default function ProfilePage() {
     }, 3500);
   };
 
-=======
-  const [twoFactorEnabled, setTwoFactorEnabled] = useState(true);
-  const [sessions, setSessions] = useState([
-    { id: 1, device: 'Chrome on Windows', location: 'London, UK', current: true },
-    { id: 2, device: 'Safari on iPhone', location: 'New York, US', current: false },
-    { id: 3, device: 'Firefox on Ubuntu', location: 'Berlin, DE', current: false },
-  ]);
-  const [avatarPreview, setAvatarPreview] = useState('');
-  const fileInputRef = useRef(null);
-
->>>>>>> main
   const handleChange = (field, value) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
   };
@@ -154,7 +128,6 @@ export default function ProfilePage() {
     const file = event.target.files?.[0];
     if (!file) return;
 
-<<<<<<< Dilmith
     if (file.size > 5 * 1024 * 1024) {
       showNotification('Image size should be less than 5MB.', 'error');
       return;
@@ -168,18 +141,10 @@ export default function ProfilePage() {
       showNotification('Profile photo uploaded & saved successfully! 📸');
     };
     reader.readAsDataURL(file);
-=======
-    const previewUrl = URL.createObjectURL(file);
-    setAvatarPreview(previewUrl);
-
-    // TODO: Connect to AWS S3 presigned upload flow
-    console.log('Selected avatar file:', file.name);
->>>>>>> main
   };
 
   const handleSaveProfile = (event) => {
     event.preventDefault();
-<<<<<<< Dilmith
     updateUser({
       name: formData.displayName,
       email: formData.email,
@@ -187,14 +152,10 @@ export default function ProfilePage() {
       avatar: avatarPreview
     });
     showNotification('Personal details saved successfully! 🎉');
-=======
-    console.log('Profile update payload:', formData);
->>>>>>> main
   };
 
   const handlePasswordSubmit = (event) => {
     event.preventDefault();
-<<<<<<< Dilmith
     if (!passwords.currentPassword) {
       showNotification('Please enter your current password.', 'error');
       return;
@@ -237,20 +198,6 @@ export default function ProfilePage() {
     setSessions(INITIAL_MOCK_SESSIONS);
     localStorage.removeItem(`user_sessions_${user?.id}`);
     showNotification('Default mock active sessions restored!');
-=======
-    if (passwords.newPassword !== passwords.confirmPassword) {
-      alert('New password and confirm password do not match.');
-      return;
-    }
-    console.log('Password update attempt:', passwords);
-    setPasswords({ currentPassword: '', newPassword: '', confirmPassword: '' });
-  };
-
-  const handleToggle2FA = () => setTwoFactorEnabled((prev) => !prev);
-
-  const revokeSession = (id) => {
-    setSessions((prev) => prev.filter((session) => session.id !== id));
->>>>>>> main
   };
 
   const initials = (formData.displayName || 'User')
@@ -260,26 +207,16 @@ export default function ProfilePage() {
     .slice(0, 2)
     .toUpperCase();
 
-<<<<<<< Dilmith
-=======
-  const displayAvatar = avatarPreview || '/logo.png';
-
->>>>>>> main
   return (
     <div style={{ minHeight: '100vh', background: 'var(--color-background)', padding: '24px 20px 40px' }}>
       <div style={{ maxWidth: '1100px', margin: '0 auto' }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '22px', gap: '12px', flexWrap: 'wrap' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-<<<<<<< Dilmith
             <Link to="/" style={{ textDecoration: 'none', color: 'var(--color-text-main)', fontWeight: 600, fontSize: '0.95rem' }}>← Back to Board</Link>
-=======
-            <Link to="/" style={{ textDecoration: 'none', color: 'inherit' }}>← Back to Board</Link>
->>>>>>> main
           </div>
           <div style={{ fontSize: '1.8rem', fontWeight: 700, color: 'var(--color-text-main)' }}>My Profile</div>
         </div>
 
-<<<<<<< Dilmith
         {feedback.message && (
           <div style={{
             display: 'flex', alignItems: 'center', gap: '10px',
@@ -304,13 +241,6 @@ export default function ProfilePage() {
                 ) : (
                   initials
                 )}
-=======
-        <div style={{ display: 'grid', gap: '22px' }}>
-          <section style={cardStyle}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '18px', flexWrap: 'wrap' }}>
-              <div style={{ width: '88px', height: '88px', borderRadius: '50%', overflow: 'hidden', background: 'var(--color-primary)', border: '3px solid var(--color-primary)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontWeight: 700, fontSize: '2rem' }}>
-                {displayAvatar === '/logo.png' ? initials : <img src={displayAvatar} alt="Profile" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />}
->>>>>>> main
               </div>
 
               <div>
@@ -321,10 +251,7 @@ export default function ProfilePage() {
           </section>
 
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '22px' }}>
-<<<<<<< Dilmith
             {/* Personal Details */}
-=======
->>>>>>> main
             <section style={cardStyle}>
               <h3 style={sectionTitle}>Personal Details</h3>
               <form onSubmit={handleSaveProfile} style={{ display: 'grid', gap: '18px' }}>
@@ -361,13 +288,8 @@ export default function ProfilePage() {
                 </label>
 
                 <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
-<<<<<<< Dilmith
                   <span style={{ ...badgeStyle, background: 'rgba(16, 185, 129, 0.15)', color: 'var(--color-success)' }}>Role: Admin</span>
                   <span style={{ ...badgeStyle, background: 'rgba(15, 118, 110, 0.15)', color: 'var(--color-primary)' }}>Active</span>
-=======
-                  <span style={{ ...badgeStyle, background: '#dcfce7', color: '#166534' }}>Role: Admin</span>
-                  <span style={{ ...badgeStyle, background: '#dff7f4', color: '#0f766e' }}>Active</span>
->>>>>>> main
                 </div>
 
                 <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
@@ -378,10 +300,7 @@ export default function ProfilePage() {
               </form>
             </section>
 
-<<<<<<< Dilmith
             {/* Avatar Management */}
-=======
->>>>>>> main
             <section style={cardStyle}>
               <h3 style={sectionTitle}>Avatar Management</h3>
 
@@ -405,22 +324,14 @@ export default function ProfilePage() {
 
                 <input ref={fileInputRef} type="file" accept="image/*" onChange={handleAvatarSelect} style={{ display: 'none' }} />
 
-<<<<<<< Dilmith
                 <p style={{ margin: 0, color: 'var(--color-text-muted)', textAlign: 'center', fontSize: '0.85rem' }}>
                   Recommended size: 800 × 800 px. Saved automatically.
-=======
-                <p style={{ margin: 0, color: 'var(--color-text-muted)', textAlign: 'center' }}>
-                  Recommended size: 800 x 800 px.
->>>>>>> main
                 </p>
               </div>
             </section>
           </div>
 
-<<<<<<< Dilmith
           {/* Security Settings & Active Sessions */}
-=======
->>>>>>> main
           <section style={cardStyle}>
             <h3 style={sectionTitle}>Security Settings</h3>
 
@@ -468,10 +379,7 @@ export default function ProfilePage() {
                 </div>
               </form>
 
-<<<<<<< Dilmith
               {/* 2FA Toggle */}
-=======
->>>>>>> main
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '12px', flexWrap: 'wrap', paddingTop: '6px' }}>
                 <div>
                   <div style={{ fontWeight: 700, color: 'var(--color-text-main)' }}>Two-Factor Authentication</div>
@@ -507,7 +415,6 @@ export default function ProfilePage() {
                 </button>
               </div>
 
-<<<<<<< Dilmith
               {/* Active Sessions List */}
               <div style={{ paddingTop: '4px' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '14px' }}>
@@ -518,10 +425,6 @@ export default function ProfilePage() {
                     </button>
                   )}
                 </div>
-=======
-              <div style={{ paddingTop: '4px' }}>
-                <h4 style={{ margin: '0 0 14px', color: 'var(--color-text-main)' }}>Active Sessions</h4>
->>>>>>> main
 
                 <div style={{ display: 'grid', gap: '12px' }}>
                   {sessions.map((session) => (
@@ -533,17 +436,10 @@ export default function ProfilePage() {
 
                       <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
                         {session.current && (
-<<<<<<< Dilmith
                           <span style={{ ...badgeStyle, background: 'rgba(16, 185, 129, 0.15)', color: 'var(--color-success)' }}>Current</span>
                         )}
                         <button type="button" onClick={() => revokeSession(session.id)} style={{ padding: '8px 12px', borderRadius: '10px', border: '1px solid #fca5a5', background: 'rgba(239, 68, 68, 0.1)', color: '#ef4444', cursor: 'pointer', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '4px' }}>
                           <Trash2 size={14} /> Revoke
-=======
-                          <span style={{ ...badgeStyle, background: '#dcfce7', color: '#166534' }}>Current</span>
-                        )}
-                        <button type="button" onClick={() => revokeSession(session.id)} style={{ padding: '8px 12px', borderRadius: '10px', border: '1px solid #fca5a5', background: '#fef2f2', color: '#b91c1c', cursor: 'pointer', fontWeight: 700 }}>
-                          Revoke
->>>>>>> main
                         </button>
                       </div>
                     </div>
@@ -581,11 +477,7 @@ const fieldStyle = {
 
 const inputStyle = {
   width: '100%',
-<<<<<<< Dilmith
   background: 'var(--color-surface)',
-=======
-  background: '#fff',
->>>>>>> main
   border: '1px solid var(--color-border)',
   borderRadius: '12px',
   padding: '12px 14px',
