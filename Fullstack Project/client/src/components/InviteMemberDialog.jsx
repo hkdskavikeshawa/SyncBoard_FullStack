@@ -19,11 +19,11 @@ export default function InviteMemberDialog({ onClose }) {
     
     try {
       await inviteMember(email.trim());
-      setSuccess('User successfully invited to the board!');
+      setSuccess('User invited successfully! An invitation email has been sent.');
       setEmail('');
       setTimeout(() => {
         onClose();
-      }, 1500);
+      }, 2000);
     } catch (err) {
       setError(err.message || 'Failed to invite user');
     } finally {

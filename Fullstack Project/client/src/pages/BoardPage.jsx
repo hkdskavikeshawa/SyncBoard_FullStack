@@ -86,7 +86,8 @@ export default function BoardPage() {
                   style={{ 
                     padding: '8px 12px', textAlign: 'left', border: 'none', background: 'transparent', 
                     cursor: 'pointer', borderRadius: 'var(--radius-sm)', 
-                    backgroundColor: activeBoardId === b.id ? 'var(--color-bg)' : 'transparent',
+                    backgroundColor: activeBoardId === b.id ? 'var(--color-border)' : 'transparent',
+                    color: 'var(--color-text-main)',
                     fontWeight: activeBoardId === b.id ? 600 : 400
                   }}
                 >
