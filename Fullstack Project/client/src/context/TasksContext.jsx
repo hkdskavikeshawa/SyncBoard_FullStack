@@ -50,7 +50,7 @@ function tasksReducer(state, action) {
 export function TasksProvider({ children }) {
   const [state, dispatch] = useReducer(tasksReducer, initialState);
   const { user } = useAuth();
-  const { addNotification } = useNotifications();
+  const { fetchUserNotifications } = useNotifications();
 
   // Load initial app data (boards & members)
   const loadInitial = useCallback(async () => {
@@ -101,16 +101,14 @@ export function TasksProvider({ children }) {
     return () => channel.close();
   }, [state.activeBoardId, loadBoardData]);
 
-  const notifySync = (message) => {
+  const notifySync = () => {
     const channel = new BroadcastChannel('collab_board_sync');
     channel.postMessage({ type: 'SYNC', boardId: state.activeBoardId });
-    if (message) {
-      channel.postMessage({ type: 'NOTIFY', message, actor: user?.name || 'Someone' });
-      // Also show locally so single-tab users see their own actions
-      addNotification(message, user?.name || 'You');
-    }
+    channel.postMessage({ type: 'NOTIFY' });
+    fetchUserNotifications();
     channel.close();
   };
+
 
   const setActiveBoard = (boardId) => dispatch({ type: 'SET_ACTIVE_BOARD', payload: boardId });
 
@@ -178,14 +176,30 @@ export function TasksProvider({ children }) {
     notifySync(`${user?.name || 'Someone'} deleted "${task?.title || 'a task'}"`);
   };
 
-  const isOwner = state.boards.find(b => b.id === state.activeBoardId)?.ownerId === user?.id;
+  const allMembers = [...state.members];
+  if (user && !allMembers.some(m => m.id === user.id)) {
+    allMembers.unshift({ id: user.id, name: user.name, email: user.email });
+  }
+
+  const activeBoard = state.boards.find(b => b.id === state.activeBoardId);
+  const isOwner = activeBoard?.ownerId === user?.id;
+
+  const boardMemberIds = activeBoard
+    ? [activeBoard.ownerId, ...(activeBoard.invitedMembers || [])]
+    : [];
+
+  const boardMembers = allMembers
+    .filter(m => boardMemberIds.includes(m.id))
+    .map(m => (user && m.id === user.id ? { ...m, name: user.name } : m));
+
 
   return (
     <TasksContext.Provider value={{ 
-      ...state, loadInitial, loadBoardData, setActiveBoard, addBoard, updateBoard, removeBoard, inviteMember, isOwner,
+      ...state, boardMembers, loadInitial, loadBoardData, setActiveBoard, addBoard, updateBoard, removeBoard, inviteMember, isOwner,
       addColumn, updateColumn, removeColumn, addTask, moveTask, removeTask, updateTaskDetails 
     }}>
       {children}
     </TasksContext.Provider>
   );
+
 }
