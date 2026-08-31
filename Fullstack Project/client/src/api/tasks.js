@@ -1,20 +1,4 @@
-<<<<<<< Dilmith
 const API_BASE_URL = 'http://localhost:5000/api';
-=======
-import { seedTasks, columns as seedColumns, boards as seedBoards, members } from '../data/mockData';
-import { getUserByEmail } from './auth';
-
-const DELAY = 600;
-let FAIL_NEXT = false;
-
-const sleep = (ms) => new Promise((res) => setTimeout(res, ms));
-const clone = (v) => JSON.parse(JSON.stringify(v));
-
-let db = clone(seedTasks);
-let cols = clone(seedColumns);
-let brds = clone(seedBoards);
-let commentsStore = []; // { id, taskId, authorId, authorName, text, createdAt }
->>>>>>> main
 
 export class NotFoundError extends Error {}
 
@@ -45,6 +29,8 @@ async function handleResponse(response) {
   }
   return data;
 }
+
+/* ---------------- Tasks ---------------- */
 
 export async function getTasks(boardId) {
   const response = await fetch(`${API_BASE_URL}/tasks?boardId=${boardId}`, {
@@ -86,6 +72,8 @@ export async function deleteTask(id) {
   return handleResponse(response);
 }
 
+/* ---------------- Columns ---------------- */
+
 export async function getColumns(boardId) {
   const response = await fetch(`${API_BASE_URL}/columns?boardId=${boardId}`, {
     headers: getHeaders(),
@@ -119,18 +107,11 @@ export async function deleteColumn(id) {
   return handleResponse(response);
 }
 
+/* ---------------- Boards ---------------- */
+
 export async function getBoards() {
   const response = await fetch(`${API_BASE_URL}/boards`, {
     headers: getHeaders(),
-  });
-  return handleResponse(response);
-}
-
-export async function inviteUserByEmail(boardId, email) {
-  const response = await fetch(`${API_BASE_URL}/boards/${boardId}/invite`, {
-    method: 'POST',
-    headers: getHeaders(),
-    body: JSON.stringify({ email }),
   });
   return handleResponse(response);
 }
@@ -161,12 +142,25 @@ export async function deleteBoard(id) {
   return handleResponse(response);
 }
 
+export async function inviteUserByEmail(boardId, email) {
+  const response = await fetch(`${API_BASE_URL}/boards/${boardId}/invite`, {
+    method: 'POST',
+    headers: getHeaders(),
+    body: JSON.stringify({ email }),
+  });
+  return handleResponse(response);
+}
+
+/* ---------------- Members ---------------- */
+
 export async function getMembers() {
   const response = await fetch(`${API_BASE_URL}/members`, {
     headers: getHeaders(),
   });
   return handleResponse(response);
 }
+
+/* ---------------- Comments ---------------- */
 
 export async function getComments(taskId) {
   const response = await fetch(`${API_BASE_URL}/tasks/${taskId}/comments`, {
@@ -182,23 +176,4 @@ export async function addComment(taskId, { text, authorId, authorName }) {
     body: JSON.stringify({ text, authorId, authorName }),
   });
   return handleResponse(response);
-}
-
-export async function getComments(taskId) {
-  await sleep(150);
-  return clone(commentsStore.filter(c => c.taskId === taskId));
-}
-
-export async function addComment(taskId, { text, authorId, authorName }) {
-  await sleep(200);
-  const comment = {
-    id: crypto.randomUUID(),
-    taskId,
-    authorId,
-    authorName,
-    text,
-    createdAt: new Date().toISOString(),
-  };
-  commentsStore = [...commentsStore, comment];
-  return clone(comment);
 }
