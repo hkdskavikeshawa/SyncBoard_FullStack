@@ -1,16 +1,3 @@
 node_modules/
-dist/
-build/
-coverage/
-
 .env
-.env.local
-.env.*.local
-
-.DS_Store
-Thumbs.db
-
-.vscode/
-.idea/
-
 *.log
