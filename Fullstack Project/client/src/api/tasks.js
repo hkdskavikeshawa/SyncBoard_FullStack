@@ -1,164 +1,180 @@
-import { seedTasks, columns as seedColumns, boards as seedBoards, members } from '../data/mockData';
-import { getUserByEmail } from './auth';
-
-const DELAY = 600;
-let FAIL_NEXT = false;
-
-const sleep = (ms) => new Promise((res) => setTimeout(res, ms));
-const clone = (v) => JSON.parse(JSON.stringify(v));
-
-let db = clone(seedTasks);
-let cols = clone(seedColumns);
-let brds = clone(seedBoards);
-let commentsStore = []; // { id, taskId, authorId, authorName, text, createdAt }
+const API_BASE_URL = 'http://localhost:5000/api';
 
 export class NotFoundError extends Error {}
 
+let FAIL_NEXT = false;
 export function simulateNextFailure() { FAIL_NEXT = true; }
 
-async function guard() {
-  await sleep(DELAY);
+const getHeaders = () => {
+  const headers = { 'Content-Type': 'application/json' };
+  const token = localStorage.getItem('token');
+  if (token) {
+    headers['Authorization'] = `Bearer ${token}`;
+  }
+  return headers;
+};
+
+async function handleResponse(response) {
   if (FAIL_NEXT) {
     FAIL_NEXT = false;
     throw new Error('Network request failed');
   }
+
+  const data = await response.json();
+  if (!response.ok) {
+    if (response.status === 404) {
+      throw new NotFoundError(data.message || 'Resource not found');
+    }
+    throw new Error(data.message || 'API request failed');
+  }
+  return data;
 }
 
+/* ---------------- Tasks ---------------- */
+
 export async function getTasks(boardId) {
-  await guard();
-  return clone(db.filter(t => t.boardId === boardId));
+  const response = await fetch(`${API_BASE_URL}/tasks?boardId=${boardId}`, {
+    headers: getHeaders(),
+  });
+  return handleResponse(response);
 }
 
 export async function getTaskById(id) {
-  await guard();
-  const task = db.find((t) => t.id === id);
-  if (!task) throw new NotFoundError(`Task ${id} not found`);
-  return clone(task);
+  const response = await fetch(`${API_BASE_URL}/tasks/${id}`, {
+    headers: getHeaders(),
+  });
+  return handleResponse(response);
 }
 
 export async function createTask(input) {
-  await guard();
-  const task = {
-    id: crypto.randomUUID(),
-    createdAt: new Date().toISOString(),
-    ...input,
-  };
-  db = [...db, task];
-  return clone(task);
+  const response = await fetch(`${API_BASE_URL}/tasks`, {
+    method: 'POST',
+    headers: getHeaders(),
+    body: JSON.stringify(input),
+  });
+  return handleResponse(response);
 }
 
 export async function updateTask(id, patch) {
-  await guard();
-  const idx = db.findIndex((t) => t.id === id);
-  if (idx === -1) throw new NotFoundError(`Task ${id} not found`);
-  db[idx] = { ...db[idx], ...patch };
-  return clone(db[idx]);
+  const response = await fetch(`${API_BASE_URL}/tasks/${id}`, {
+    method: 'PUT',
+    headers: getHeaders(),
+    body: JSON.stringify(patch),
+  });
+  return handleResponse(response);
 }
 
 export async function deleteTask(id) {
-  await guard();
-  db = db.filter((t) => t.id !== id);
-  return { id };
+  const response = await fetch(`${API_BASE_URL}/tasks/${id}`, {
+    method: 'DELETE',
+    headers: getHeaders(),
+  });
+  return handleResponse(response);
 }
 
+/* ---------------- Columns ---------------- */
+
 export async function getColumns(boardId) {
-  await sleep(100);
-  return clone(cols.filter(c => c.boardId === boardId));
+  const response = await fetch(`${API_BASE_URL}/columns?boardId=${boardId}`, {
+    headers: getHeaders(),
+  });
+  return handleResponse(response);
 }
 
 export async function createColumn(boardId, name) {
-  await sleep(100);
-  const col = {
-    id: crypto.randomUUID(),
-    boardId,
-    name,
-    order: cols.filter(c => c.boardId === boardId).length + 1
-  };
-  cols.push(col);
-  return clone(col);
+  const response = await fetch(`${API_BASE_URL}/columns`, {
+    method: 'POST',
+    headers: getHeaders(),
+    body: JSON.stringify({ boardId, name }),
+  });
+  return handleResponse(response);
 }
 
 export async function updateColumn(id, patch) {
-  await sleep(100);
-  const idx = cols.findIndex((c) => c.id === id);
-  if (idx === -1) throw new NotFoundError(`Column ${id} not found`);
-  cols[idx] = { ...cols[idx], ...patch };
-  return clone(cols[idx]);
+  const response = await fetch(`${API_BASE_URL}/columns/${id}`, {
+    method: 'PUT',
+    headers: getHeaders(),
+    body: JSON.stringify(patch),
+  });
+  return handleResponse(response);
 }
 
 export async function deleteColumn(id) {
-  await sleep(100);
-  cols = cols.filter(c => c.id !== id);
-}
-
-export async function getBoards(userId) {
-  await sleep(100);
-  return clone(brds.filter(b => b.ownerId === userId || (b.invitedMembers || []).includes(userId)));
-}
-
-export async function inviteUserByEmail(boardId, email) {
-  await sleep(100);
-  const user = await getUserByEmail(email);
-  const board = brds.find(b => b.id === boardId);
-  if (!board) throw new NotFoundError('Board not found');
-  if (board.ownerId === user.id) throw new Error('User is already the owner of this board');
-  
-  board.invitedMembers = board.invitedMembers || [];
-  if (board.invitedMembers.includes(user.id)) {
-    throw new Error('User is already invited to this board');
-  }
-  
-  board.invitedMembers.push(user.id);
-  return clone(board);
-}
-
-export async function createBoard(name, ownerId) {
-  await sleep(100);
-  const b = { id: crypto.randomUUID(), name, ownerId, invitedMembers: [] };
-  brds.push(b);
-  // Give it default columns
-  ['To Do', 'In Progress', 'Done'].forEach((n, i) => {
-    cols.push({ id: crypto.randomUUID(), boardId: b.id, name: n, order: i + 1 });
+  const response = await fetch(`${API_BASE_URL}/columns/${id}`, {
+    method: 'DELETE',
+    headers: getHeaders(),
   });
-  return clone(b);
+  return handleResponse(response);
+}
+
+/* ---------------- Boards ---------------- */
+
+export async function getBoards() {
+  const response = await fetch(`${API_BASE_URL}/boards`, {
+    headers: getHeaders(),
+  });
+  return handleResponse(response);
+}
+
+export async function createBoard(name) {
+  const response = await fetch(`${API_BASE_URL}/boards`, {
+    method: 'POST',
+    headers: getHeaders(),
+    body: JSON.stringify({ name }),
+  });
+  return handleResponse(response);
 }
 
 export async function updateBoard(id, patch) {
-  await sleep(100);
-  const idx = brds.findIndex((b) => b.id === id);
-  if (idx === -1) throw new NotFoundError(`Board ${id} not found`);
-  brds[idx] = { ...brds[idx], ...patch };
-  return clone(brds[idx]);
+  const response = await fetch(`${API_BASE_URL}/boards/${id}`, {
+    method: 'PUT',
+    headers: getHeaders(),
+    body: JSON.stringify(patch),
+  });
+  return handleResponse(response);
 }
 
 export async function deleteBoard(id) {
-  await sleep(100);
-  brds = brds.filter(b => b.id !== id);
-  // Also clean up columns and tasks related to this board
-  cols = cols.filter(c => c.boardId !== id);
-  db = db.filter(t => t.boardId !== id);
+  const response = await fetch(`${API_BASE_URL}/boards/${id}`, {
+    method: 'DELETE',
+    headers: getHeaders(),
+  });
+  return handleResponse(response);
 }
+
+export async function inviteUserByEmail(boardId, email) {
+  const response = await fetch(`${API_BASE_URL}/boards/${boardId}/invite`, {
+    method: 'POST',
+    headers: getHeaders(),
+    body: JSON.stringify({ email }),
+  });
+  return handleResponse(response);
+}
+
+/* ---------------- Members ---------------- */
 
 export async function getMembers() {
-  await sleep(100);
-  return clone(members);
+  const response = await fetch(`${API_BASE_URL}/members`, {
+    headers: getHeaders(),
+  });
+  return handleResponse(response);
 }
 
+/* ---------------- Comments ---------------- */
+
 export async function getComments(taskId) {
-  await sleep(150);
-  return clone(commentsStore.filter(c => c.taskId === taskId));
+  const response = await fetch(`${API_BASE_URL}/tasks/${taskId}/comments`, {
+    headers: getHeaders(),
+  });
+  return handleResponse(response);
 }
 
 export async function addComment(taskId, { text, authorId, authorName }) {
-  await sleep(200);
-  const comment = {
-    id: crypto.randomUUID(),
-    taskId,
-    authorId,
-    authorName,
-    text,
-    createdAt: new Date().toISOString(),
-  };
-  commentsStore = [...commentsStore, comment];
-  return clone(comment);
+  const response = await fetch(`${API_BASE_URL}/tasks/${taskId}/comments`, {
+    method: 'POST',
+    headers: getHeaders(),
+    body: JSON.stringify({ text, authorId, authorName }),
+  });
+  return handleResponse(response);
 }
+

@@ -1,13 +1,50 @@
 import { useState } from 'react';
+import html2pdf from 'html2pdf.js';
 import { useTasks } from '../hooks/useTasks';
 import Navbar from '../components/Navbar';
 import LoadingState from '../components/LoadingState';
 import ErrorState from '../components/ErrorState';
+import ScheduleReportDialog from '../components/ScheduleReportDialog';
 import { BarChart2, CheckCircle2, Clock, Users, PieChart, TrendingUp, AlertTriangle } from 'lucide-react';
 
 export default function AnalyticsPage() {
   const { tasks, columns, members, status, error, loadInitial } = useTasks();
   const [selectedBoardFilter, setSelectedBoardFilter] = useState('all');
+  const [showScheduleModal, setShowScheduleModal] = useState(false);
+
+  if (status === 'loading' || status === 'idle') return <LoadingState />;
+  if (status === 'error') return <ErrorState message={error} onRetry={loadInitial} />;
+
+  const totalTasks = tasks.length;
+
+  const statusCounts = columns.map(col => {
+    const count = tasks.filter(t => t.columnId === col.id).length;
+    const percentage = totalTasks > 0 ? Math.round((count / totalTasks) * 100) : 0;
+    return { id: col.id, name: col.name, count, percentage };
+  });
+
+  const priorities = ['urgent', 'high', 'medium', 'low'];
+  const priorityColors = { urgent: '#EF4444', high: '#F97316', medium: '#EAB308', low: '#3B82F6' };
+
+  const priorityCounts = priorities.map(p => {
+    const count = tasks.filter(t => (t.priority || 'medium').toLowerCase() === p).length;
+    const percentage = totalTasks > 0 ? Math.round((count / totalTasks) * 100) : 0;
+    return { name: p.toUpperCase(), count, percentage, color: priorityColors[p] };
+  });
+
+  const todayStr = new Date().toISOString().split('T')[0];
+  const doneColumn = columns.find(c => c.name.toLowerCase().includes('done') || c.name.toLowerCase().includes('complete'));
+  const overdueCount = tasks.filter(t => t.dueDate && t.dueDate < todayStr && t.columnId !== doneColumn?.id).length;
+
+  const completedCount = doneColumn ? tasks.filter(t => t.columnId === doneColumn.id).length : 0;
+  const completionRate = totalTasks > 0 ? Math.round((completedCount / totalTasks) * 100) : 0;
+
+  const memberWorkload = members.map(m => {
+    const memberTasks = tasks.filter(t => (t.assigneeIds || []).includes(m.id) || t.assigneeId === m.id);
+    const memberCompleted = memberTasks.filter(t => t.columnId === doneColumn?.id).length;
+    const rate = memberTasks.length > 0 ? Math.round((memberCompleted / memberTasks.length) * 100) : 0;
+    return { member: m, total: memberTasks.length, completed: memberCompleted, rate };
+  });
 
   const downloadTextFile = (filename, content, type) => {
     const blob = new Blob([content], { type });
@@ -22,9 +59,128 @@ export default function AnalyticsPage() {
   };
 
   const handleDownloadPdf = () => {
-    const docTitle = 'SyncBoard_Analytics_Report';
-    const pdfContent = `%PDF-1.4\n1 0 obj<< /Type /Catalog /Pages 2 0 R >>endobj\n2 0 obj<< /Type /Pages /Kids [3 0 R] /Count 1 >>endobj\n3 0 obj<< /Type /Page /Parent 2 0 R /MediaBox [0 0 300 144] /Contents 4 0 R /Resources << /Font << /F1 5 0 R >> >> >>endobj\n4 0 obj<< /Length 76 >>stream\nBT /F1 18 Tf 50 100 Td (SyncBoard Analytics Report) Tj ET\nendstream\nendobj\n5 0 obj<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>endobj\nxref\n0 6\n0000000000 65535 f \n0000000010 00000 n \n0000000063 00000 n \n0000000129 00000 n \n0000000435 00000 n \n0000000596 00000 n \ntrailer\n<< /Root 1 0 R /Size 6 >>\nstartxref\n681\n%%EOF`;
-    downloadTextFile(`${docTitle}.pdf`, pdfContent, 'application/pdf');
+    const printDate = new Date().toLocaleString();
+
+    const element = document.createElement('div');
+    element.style.padding = '24px';
+    element.style.background = '#ffffff';
+    element.style.color = '#1E293B';
+    element.style.fontFamily = "'Segoe UI', Roboto, Helvetica, Arial, sans-serif";
+
+    element.innerHTML = `
+      <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 3px solid #0F766E; padding-bottom: 12px; margin-bottom: 20px;">
+        <div>
+          <h1 style="color: #0F766E; margin: 0; font-size: 20px; font-weight: 700;">SyncBoard Analytics & Workspace Report</h1>
+          <p style="margin: 4px 0 0; color: #64748B; font-size: 12px;">Comprehensive Sprint Velocity & Team Workload Report</p>
+        </div>
+        <div style="font-size: 11px; color: #64748B; text-align: right;">
+          <p style="margin:0;"><strong>Date:</strong> ${printDate}</p>
+          <p style="margin:3px 0 0;"><strong>Status:</strong> Active Workspace</p>
+        </div>
+      </div>
+
+      <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 20px;">
+        <div style="background: #F8FAFC; border: 1px solid #E2E8F0; padding: 12px; border-radius: 6px; text-align: center;">
+          <div style="font-size: 10px; color: #64748B; text-transform: uppercase; font-weight: 700;">Total Tasks</div>
+          <div style="font-size: 18px; font-weight: 700; color: #0F766E; margin-top: 4px;">${totalTasks}</div>
+        </div>
+        <div style="background: #F8FAFC; border: 1px solid #E2E8F0; padding: 12px; border-radius: 6px; text-align: center;">
+          <div style="font-size: 10px; color: #64748B; text-transform: uppercase; font-weight: 700;">Completion Rate</div>
+          <div style="font-size: 18px; font-weight: 700; color: #0F766E; margin-top: 4px;">${completionRate}%</div>
+        </div>
+        <div style="background: #F8FAFC; border: 1px solid #E2E8F0; padding: 12px; border-radius: 6px; text-align: center;">
+          <div style="font-size: 10px; color: #64748B; text-transform: uppercase; font-weight: 700;">Overdue Tasks</div>
+          <div style="font-size: 18px; font-weight: 700; color: ${overdueCount > 0 ? '#EF4444' : '#0F766E'}; margin-top: 4px;">${overdueCount}</div>
+        </div>
+        <div style="background: #F8FAFC; border: 1px solid #E2E8F0; padding: 12px; border-radius: 6px; text-align: center;">
+          <div style="font-size: 10px; color: #64748B; text-transform: uppercase; font-weight: 700;">Contributors</div>
+          <div style="font-size: 18px; font-weight: 700; color: #0F766E; margin-top: 4px;">${members.length}</div>
+        </div>
+      </div>
+
+      <div style="font-size: 14px; font-weight: 700; color: #0F766E; border-bottom: 2px solid #E2E8F0; padding-bottom: 4px; margin-top: 18px; margin-bottom: 10px;">1. Column Status Distribution</div>
+      <table style="width: 100%; border-collapse: collapse; margin-top: 6px; font-size: 12px;">
+        <thead>
+          <tr style="background: #0F766E; color: #ffffff;">
+            <th style="padding: 8px 10px; text-align: left;">Column Status</th>
+            <th style="padding: 8px 10px; text-align: left;">Task Count</th>
+            <th style="padding: 8px 10px; text-align: left;">Percentage Share</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${statusCounts.map((col, idx) => `
+            <tr style="background: ${idx % 2 === 0 ? '#ffffff' : '#F8FAFC'}; border-bottom: 1px solid #E2E8F0;">
+              <td style="padding: 8px 10px;"><strong>${col.name}</strong></td>
+              <td style="padding: 8px 10px;">${col.count} tasks</td>
+              <td style="padding: 8px 10px;">${col.percentage}%</td>
+            </tr>
+          `).join('')}
+        </tbody>
+      </table>
+
+      <div style="font-size: 14px; font-weight: 700; color: #0F766E; border-bottom: 2px solid #E2E8F0; padding-bottom: 4px; margin-top: 18px; margin-bottom: 10px;">2. Team Member Workload Summary</div>
+      <table style="width: 100%; border-collapse: collapse; margin-top: 6px; font-size: 12px;">
+        <thead>
+          <tr style="background: #0F766E; color: #ffffff;">
+            <th style="padding: 8px 10px; text-align: left;">Member Name</th>
+            <th style="padding: 8px 10px; text-align: left;">Role</th>
+            <th style="padding: 8px 10px; text-align: left;">Assigned</th>
+            <th style="padding: 8px 10px; text-align: left;">Completed</th>
+            <th style="padding: 8px 10px; text-align: left;">Completion Rate</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${memberWorkload.map(({ member, total, completed, rate }, idx) => `
+            <tr style="background: ${idx % 2 === 0 ? '#ffffff' : '#F8FAFC'}; border-bottom: 1px solid #E2E8F0;">
+              <td style="padding: 8px 10px;"><strong>${member.name}</strong></td>
+              <td style="padding: 8px 10px;">${member.role || 'Team Member'}</td>
+              <td style="padding: 8px 10px;">${total}</td>
+              <td style="padding: 8px 10px;">${completed}</td>
+              <td style="padding: 8px 10px;">${rate}%</td>
+            </tr>
+          `).join('')}
+        </tbody>
+      </table>
+
+      <div style="font-size: 14px; font-weight: 700; color: #0F766E; border-bottom: 2px solid #E2E8F0; padding-bottom: 4px; margin-top: 18px; margin-bottom: 10px;">3. Detailed Task Inventory</div>
+      <table style="width: 100%; border-collapse: collapse; margin-top: 6px; font-size: 12px;">
+        <thead>
+          <tr style="background: #0F766E; color: #ffffff;">
+            <th style="padding: 8px 10px; text-align: left;">Task Title</th>
+            <th style="padding: 8px 10px; text-align: left;">Status Column</th>
+            <th style="padding: 8px 10px; text-align: left;">Assignees</th>
+            <th style="padding: 8px 10px; text-align: left;">Due Date</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${tasks.map((t, idx) => {
+            const col = columns.find(c => c.id === t.columnId);
+            const assigneeNames = (t.assigneeIds || []).map(id => {
+              const m = members.find(mem => mem.id === id);
+              return m ? m.name : id;
+            }).join(', ') || 'Unassigned';
+            return `
+              <tr style="background: ${idx % 2 === 0 ? '#ffffff' : '#F8FAFC'}; border-bottom: 1px solid #E2E8F0;">
+                <td style="padding: 8px 10px;"><strong>${t.title}</strong></td>
+                <td style="padding: 8px 10px;">${col ? col.name : 'N/A'}</td>
+                <td style="padding: 8px 10px;">${assigneeNames}</td>
+                <td style="padding: 8px 10px;">${t.dueDate || 'No due date'}</td>
+              </tr>
+            `;
+          }).join('')}
+        </tbody>
+      </table>
+    `;
+
+    const opt = {
+      margin: 0.3,
+      filename: 'SyncBoard_Analytics_Report.pdf',
+      image: { type: 'jpeg', quality: 0.98 },
+      html2canvas: { scale: 2, useCORS: true, logging: false },
+      jsPDF: { unit: 'in', format: 'letter', orientation: 'portrait' }
+    };
+
+    html2pdf().set(opt).from(element).save();
   };
 
   const handleDownloadCsv = () => {
@@ -41,54 +197,13 @@ export default function AnalyticsPage() {
   };
 
   const handleConfigureSchedule = () => {
-    alert('Scheduled reporting is ready to be connected to your backend email delivery flow.');
+    setShowScheduleModal(true);
   };
-
-  if (status === 'loading' || status === 'idle') return <LoadingState />;
-  if (status === 'error') return <ErrorState message={error} onRetry={loadInitial} />;
-
-  // Filter tasks if needed
-  const totalTasks = tasks.length;
-
-  // Status distribution
-  const statusCounts = columns.map(col => {
-    const count = tasks.filter(t => t.columnId === col.id).length;
-    const percentage = totalTasks > 0 ? Math.round((count / totalTasks) * 100) : 0;
-    return { id: col.id, name: col.name, count, percentage };
-  });
-
-  // Priority distribution
-  const priorities = ['urgent', 'high', 'medium', 'low'];
-  const priorityColors = { urgent: '#EF4444', high: '#F97316', medium: '#EAB308', low: '#3B82F6' };
-  
-  const priorityCounts = priorities.map(p => {
-    const count = tasks.filter(t => (t.priority || 'medium').toLowerCase() === p).length;
-    const percentage = totalTasks > 0 ? Math.round((count / totalTasks) * 100) : 0;
-    return { name: p.toUpperCase(), count, percentage, color: priorityColors[p] };
-  });
-
-  // Overdue count
-  const todayStr = new Date().toISOString().split('T')[0];
-  const doneColumn = columns.find(c => c.name.toLowerCase().includes('done') || c.name.toLowerCase().includes('complete'));
-  const overdueCount = tasks.filter(t => t.dueDate && t.dueDate < todayStr && t.columnId !== doneColumn?.id).length;
-
-  // Completed count
-  const completedCount = doneColumn ? tasks.filter(t => t.columnId === doneColumn.id).length : 0;
-  const completionRate = totalTasks > 0 ? Math.round((completedCount / totalTasks) * 100) : 0;
-
-  // Member workload
-  const memberWorkload = members.map(m => {
-    const memberTasks = tasks.filter(t => (t.assigneeIds || []).includes(m.id) || t.assigneeId === m.id);
-    const memberCompleted = memberTasks.filter(t => t.columnId === doneColumn?.id).length;
-    const rate = memberTasks.length > 0 ? Math.round((memberCompleted / memberTasks.length) * 100) : 0;
-    return { member: m, total: memberTasks.length, completed: memberCompleted, rate };
-  });
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh', padding: '24px', backgroundColor: 'var(--color-background)' }}>
       <Navbar />
 
-      {/* Page Header */}
       <div style={{ marginBottom: '24px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <div>
           <h1 style={{ fontSize: '1.75rem', fontWeight: 700, color: 'var(--color-text-main)', margin: 0, display: 'flex', alignItems: 'center', gap: '10px' }}>
@@ -101,7 +216,6 @@ export default function AnalyticsPage() {
         </div>
       </div>
 
-      {/* Overview Stats Cards */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '16px', marginBottom: '24px' }}>
         <div className="glass-panel" style={{ padding: '20px', borderRadius: 'var(--radius-md)', display: 'flex', alignItems: 'center', gap: '16px' }}>
           <div style={{ padding: '12px', borderRadius: '50%', backgroundColor: 'rgba(56, 189, 248, 0.15)', color: '#0284C7' }}>
@@ -144,10 +258,7 @@ export default function AnalyticsPage() {
         </div>
       </div>
 
-      {/* Main Charts & Breakdown Section */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(340px, 1fr))', gap: '24px', marginBottom: '24px' }}>
-        
-        {/* Task Status Breakdown */}
         <div className="glass-panel" style={{ padding: '24px', borderRadius: 'var(--radius-lg)' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '20px' }}>
             <PieChart size={20} color="var(--color-primary)" />
@@ -168,7 +279,6 @@ export default function AnalyticsPage() {
           </div>
         </div>
 
-        {/* Priority Breakdown */}
         <div className="glass-panel" style={{ padding: '24px', borderRadius: 'var(--radius-lg)' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '20px' }}>
             <TrendingUp size={20} color="var(--color-primary)" />
@@ -193,7 +303,6 @@ export default function AnalyticsPage() {
         </div>
       </div>
 
-      {/* Member Workload Cards */}
       <div className="glass-panel" style={{ padding: '24px', borderRadius: 'var(--radius-lg)' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '20px' }}>
           <Users size={20} color="var(--color-primary)" />
@@ -226,7 +335,6 @@ export default function AnalyticsPage() {
         </div>
       </div>
 
-      {/* Reports & Data Export */}
       <div className="glass-panel" style={{ marginTop: '24px', padding: '24px', borderRadius: 'var(--radius-lg)' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '20px' }}>
           <BarChart2 size={20} color="var(--color-primary)" />
@@ -260,6 +368,10 @@ export default function AnalyticsPage() {
           </div>
         </div>
       </div>
+
+      {showScheduleModal && (
+        <ScheduleReportDialog onClose={() => setShowScheduleModal(false)} />
+      )}
     </div>
   );
 }
