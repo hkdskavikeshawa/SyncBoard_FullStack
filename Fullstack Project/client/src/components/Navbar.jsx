@@ -124,9 +124,13 @@ export default function Navbar({ onOpenActivity }) {
               width: '34px', height: '34px', borderRadius: '50%', 
               backgroundColor: 'var(--color-primary)', color: 'white', 
               display: 'flex', alignItems: 'center', justifyContent: 'center', 
-              fontWeight: 600, fontSize: '0.875rem' 
+              fontWeight: 600, fontSize: '0.875rem', overflow: 'hidden'
             }} title={user?.email || 'User'}>
-              {avatarLetter}
+              {user?.avatar ? (
+                <img src={user.avatar} alt="Avatar" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+              ) : (
+                avatarLetter
+              )}
             </div>
           </button>
 
@@ -151,16 +155,20 @@ export default function Navbar({ onOpenActivity }) {
                   width: '42px', height: '42px', borderRadius: '50%',
                   backgroundColor: 'var(--color-primary)', color: '#fff',
                   display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  fontWeight: 700
+                  fontWeight: 700, overflow: 'hidden'
                 }}>
-                  {avatarLetter}
+                  {user?.avatar ? (
+                    <img src={user.avatar} alt="Avatar" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                  ) : (
+                    avatarLetter
+                  )}
                 </div>
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <div style={{ fontWeight: 700, color: 'var(--color-text-main)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                    {user?.name || 'Demo User'}
+                    {user?.name || 'Ayesha'}
                   </div>
                   <div style={{ fontSize: '0.75rem', color: 'var(--color-text-muted)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                    {user?.email || 'demo@example.com'}
+                    {user?.email || 'ayesha@gmail.com'}
                   </div>
                 </div>
               </div>
