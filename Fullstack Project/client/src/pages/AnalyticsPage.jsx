@@ -15,37 +15,30 @@ export default function AnalyticsPage() {
   if (status === 'loading' || status === 'idle') return <LoadingState />;
   if (status === 'error') return <ErrorState message={error} onRetry={loadInitial} />;
 
-
-  // Filter tasks if needed
   const totalTasks = tasks.length;
 
-  // Status distribution
   const statusCounts = columns.map(col => {
     const count = tasks.filter(t => t.columnId === col.id).length;
     const percentage = totalTasks > 0 ? Math.round((count / totalTasks) * 100) : 0;
     return { id: col.id, name: col.name, count, percentage };
   });
 
-  // Priority distribution
   const priorities = ['urgent', 'high', 'medium', 'low'];
   const priorityColors = { urgent: '#EF4444', high: '#F97316', medium: '#EAB308', low: '#3B82F6' };
-  
+
   const priorityCounts = priorities.map(p => {
     const count = tasks.filter(t => (t.priority || 'medium').toLowerCase() === p).length;
     const percentage = totalTasks > 0 ? Math.round((count / totalTasks) * 100) : 0;
     return { name: p.toUpperCase(), count, percentage, color: priorityColors[p] };
   });
 
-  // Overdue count
   const todayStr = new Date().toISOString().split('T')[0];
   const doneColumn = columns.find(c => c.name.toLowerCase().includes('done') || c.name.toLowerCase().includes('complete'));
   const overdueCount = tasks.filter(t => t.dueDate && t.dueDate < todayStr && t.columnId !== doneColumn?.id).length;
 
-  // Completed count
   const completedCount = doneColumn ? tasks.filter(t => t.columnId === doneColumn.id).length : 0;
   const completionRate = totalTasks > 0 ? Math.round((completedCount / totalTasks) * 100) : 0;
 
-  // Member workload
   const memberWorkload = members.map(m => {
     const memberTasks = tasks.filter(t => (t.assigneeIds || []).includes(m.id) || t.assigneeId === m.id);
     const memberCompleted = memberTasks.filter(t => t.columnId === doneColumn?.id).length;
@@ -180,16 +173,15 @@ export default function AnalyticsPage() {
     `;
 
     const opt = {
-      margin:       0.3,
-      filename:     'SyncBoard_Analytics_Report.pdf',
-      image:        { type: 'jpeg', quality: 0.98 },
-      html2canvas:  { scale: 2, useCORS: true, logging: false },
-      jsPDF:        { unit: 'in', format: 'letter', orientation: 'portrait' }
+      margin: 0.3,
+      filename: 'SyncBoard_Analytics_Report.pdf',
+      image: { type: 'jpeg', quality: 0.98 },
+      html2canvas: { scale: 2, useCORS: true, logging: false },
+      jsPDF: { unit: 'in', format: 'letter', orientation: 'portrait' }
     };
 
     html2pdf().set(opt).from(element).save();
   };
-
 
   const handleDownloadCsv = () => {
     const csvRows = [
@@ -212,7 +204,6 @@ export default function AnalyticsPage() {
     <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh', padding: '24px', backgroundColor: 'var(--color-background)' }}>
       <Navbar />
 
-      {/* Page Header */}
       <div style={{ marginBottom: '24px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <div>
           <h1 style={{ fontSize: '1.75rem', fontWeight: 700, color: 'var(--color-text-main)', margin: 0, display: 'flex', alignItems: 'center', gap: '10px' }}>
@@ -225,7 +216,6 @@ export default function AnalyticsPage() {
         </div>
       </div>
 
-      {/* Overview Stats Cards */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '16px', marginBottom: '24px' }}>
         <div className="glass-panel" style={{ padding: '20px', borderRadius: 'var(--radius-md)', display: 'flex', alignItems: 'center', gap: '16px' }}>
           <div style={{ padding: '12px', borderRadius: '50%', backgroundColor: 'rgba(56, 189, 248, 0.15)', color: '#0284C7' }}>
@@ -268,10 +258,7 @@ export default function AnalyticsPage() {
         </div>
       </div>
 
-      {/* Main Charts & Breakdown Section */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(340px, 1fr))', gap: '24px', marginBottom: '24px' }}>
-        
-        {/* Task Status Breakdown */}
         <div className="glass-panel" style={{ padding: '24px', borderRadius: 'var(--radius-lg)' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '20px' }}>
             <PieChart size={20} color="var(--color-primary)" />
@@ -292,7 +279,6 @@ export default function AnalyticsPage() {
           </div>
         </div>
 
-        {/* Priority Breakdown */}
         <div className="glass-panel" style={{ padding: '24px', borderRadius: 'var(--radius-lg)' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '20px' }}>
             <TrendingUp size={20} color="var(--color-primary)" />
@@ -317,7 +303,6 @@ export default function AnalyticsPage() {
         </div>
       </div>
 
-      {/* Member Workload Cards */}
       <div className="glass-panel" style={{ padding: '24px', borderRadius: 'var(--radius-lg)' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '20px' }}>
           <Users size={20} color="var(--color-primary)" />
@@ -350,7 +335,6 @@ export default function AnalyticsPage() {
         </div>
       </div>
 
-      {/* Reports & Data Export */}
       <div className="glass-panel" style={{ marginTop: '24px', padding: '24px', borderRadius: 'var(--radius-lg)' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '20px' }}>
           <BarChart2 size={20} color="var(--color-primary)" />
@@ -391,4 +375,3 @@ export default function AnalyticsPage() {
     </div>
   );
 }
-

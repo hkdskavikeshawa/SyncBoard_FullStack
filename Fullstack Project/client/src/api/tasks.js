@@ -177,3 +177,4 @@ export async function addComment(taskId, { text, authorId, authorName }) {
   });
   return handleResponse(response);
 }
+

@@ -45,7 +45,6 @@ export default function ProfilePage() {
     email: user?.email || 'ayesha@gmail.com',
     bio: user?.bio || 'Senior Product Designer leading onboarding and user experience improvements.',
   });
-
   const [passwords, setPasswords] = useState({
     currentPassword: '',
     newPassword: '',
@@ -108,6 +107,12 @@ export default function ProfilePage() {
       }
     }
   }, [user]);
+
+  useEffect(() => {
+    if (user?.id) {
+      localStorage.setItem(`user_sessions_${user.id}`, JSON.stringify(sessions));
+    }
+  }, [sessions, user?.id]);
 
   const showNotification = (message, type = 'success') => {
     setFeedback({ message, type });
@@ -232,7 +237,6 @@ export default function ProfilePage() {
         )}
 
         <div style={{ display: 'grid', gap: '22px' }}>
-          {/* Header Summary Banner */}
           <section style={cardStyle}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '18px', flexWrap: 'wrap' }}>
               <div style={{ width: '88px', height: '88px', borderRadius: '50%', overflow: 'hidden', background: 'var(--color-primary)', border: '3px solid var(--color-primary)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontWeight: 700, fontSize: '2rem' }}>
@@ -251,7 +255,6 @@ export default function ProfilePage() {
           </section>
 
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '22px' }}>
-            {/* Personal Details */}
             <section style={cardStyle}>
               <h3 style={sectionTitle}>Personal Details</h3>
               <form onSubmit={handleSaveProfile} style={{ display: 'grid', gap: '18px' }}>
@@ -300,7 +303,6 @@ export default function ProfilePage() {
               </form>
             </section>
 
-            {/* Avatar Management */}
             <section style={cardStyle}>
               <h3 style={sectionTitle}>Avatar Management</h3>
 
@@ -331,7 +333,6 @@ export default function ProfilePage() {
             </section>
           </div>
 
-          {/* Security Settings & Active Sessions */}
           <section style={cardStyle}>
             <h3 style={sectionTitle}>Security Settings</h3>
 
@@ -379,7 +380,6 @@ export default function ProfilePage() {
                 </div>
               </form>
 
-              {/* 2FA Toggle */}
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '12px', flexWrap: 'wrap', paddingTop: '6px' }}>
                 <div>
                   <div style={{ fontWeight: 700, color: 'var(--color-text-main)' }}>Two-Factor Authentication</div>
@@ -415,7 +415,6 @@ export default function ProfilePage() {
                 </button>
               </div>
 
-              {/* Active Sessions List */}
               <div style={{ paddingTop: '4px' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '14px' }}>
                   <h4 style={{ margin: 0, color: 'var(--color-text-main)' }}>Active Sessions</h4>
