@@ -1,21 +1,52 @@
 import { createContext, useContext, useState, useEffect, useCallback, useRef } from 'react';
+import { useAuth } from './AuthContext';
+import * as notifApi from '../api/notifications';
 
 const NotificationContext = createContext(null);
 
 export function NotificationProvider({ children }) {
   const [notifications, setNotifications] = useState([]);
   const bellRef = useRef(null); // exposed so Navbar can trigger ring animation
+  const { user } = useAuth();
 
-  // Listen for NOTIFY events from other tabs via BroadcastChannel
+  const triggerBellRing = () => {
+    if (bellRef.current) {
+      bellRef.current.classList.remove('bell-ring');
+      void bellRef.current.offsetWidth;
+      bellRef.current.classList.add('bell-ring');
+      setTimeout(() => bellRef.current?.classList.remove('bell-ring'), 700);
+    }
+  };
+
+  const fetchUserNotifications = useCallback(async () => {
+    if (!user) {
+      setNotifications([]);
+      return;
+    }
+    try {
+      const data = await notifApi.getNotifications();
+      setNotifications(data || []);
+    } catch (err) {
+      console.error('Error fetching user notifications:', err);
+    }
+  }, [user]);
+
+  // Load user notifications when user changes
+  useEffect(() => {
+    fetchUserNotifications();
+  }, [fetchUserNotifications]);
+
+  // Listen for real-time SYNC/NOTIFY broadcast triggers from other tabs
   useEffect(() => {
     const channel = new BroadcastChannel('collab_board_sync');
     channel.onmessage = (e) => {
-      if (e.data.type === 'NOTIFY' && e.data.message) {
-        addNotification(e.data.message, e.data.actor || 'Someone');
+      if (e.data.type === 'NOTIFY' || e.data.type === 'SYNC') {
+        // Refetch user's notifications from backend when an action occurs
+        fetchUserNotifications().then(() => triggerBellRing());
       }
     };
     return () => channel.close();
-  }, []);
+  }, [fetchUserNotifications]);
 
   const addNotification = useCallback((message, actor = '') => {
     const notif = {
@@ -25,29 +56,32 @@ export function NotificationProvider({ children }) {
       timestamp: new Date().toISOString(),
       read: false,
     };
-    setNotifications(prev => [notif, ...prev].slice(0, 50)); // keep last 50
-    // Trigger bell ring on the bell button if ref is attached
-    if (bellRef.current) {
-      bellRef.current.classList.remove('bell-ring');
-      // Force reflow so animation restarts
-      void bellRef.current.offsetWidth;
-      bellRef.current.classList.add('bell-ring');
-      setTimeout(() => bellRef.current?.classList.remove('bell-ring'), 700);
+    setNotifications(prev => [notif, ...prev].slice(0, 50));
+    triggerBellRing();
+  }, []);
+
+  const markAllRead = useCallback(async () => {
+    setNotifications(prev => prev.map(n => ({ ...n, read: true })));
+    try {
+      await notifApi.markNotificationsAsRead();
+    } catch (err) {
+      console.error('Failed to mark notifications read on server:', err);
     }
   }, []);
 
-  const markAllRead = useCallback(() => {
-    setNotifications(prev => prev.map(n => ({ ...n, read: true })));
-  }, []);
-
-  const clearAll = useCallback(() => {
+  const clearAll = useCallback(async () => {
     setNotifications([]);
+    try {
+      await notifApi.clearNotifications();
+    } catch (err) {
+      console.error('Failed to clear notifications on server:', err);
+    }
   }, []);
 
   const unreadCount = notifications.filter(n => !n.read).length;
 
   return (
-    <NotificationContext.Provider value={{ notifications, unreadCount, addNotification, markAllRead, clearAll, bellRef }}>
+    <NotificationContext.Provider value={{ notifications, unreadCount, fetchUserNotifications, addNotification, markAllRead, clearAll, bellRef }}>
       {children}
     </NotificationContext.Provider>
   );
