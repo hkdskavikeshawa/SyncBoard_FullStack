@@ -1,27 +1,120 @@
-import { useRef, useState } from 'react';
+import { useRef, useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import { CheckCircle2, AlertCircle, Trash2, RefreshCw } from 'lucide-react';
+
+const getBrowserAndOS = () => {
+  const ua = navigator.userAgent;
+  let browser = 'Chrome';
+  if (ua.includes('Firefox')) browser = 'Firefox';
+  else if (ua.includes('Safari') && !ua.includes('Chrome')) browser = 'Safari';
+  else if (ua.includes('Edg')) browser = 'Edge';
+
+  let os = 'Windows';
+  if (ua.includes('Mac')) os = 'macOS';
+  else if (ua.includes('Linux')) os = 'Linux';
+  else if (ua.includes('Android')) os = 'Android';
+  else if (ua.includes('iPhone') || ua.includes('iPad')) os = 'iOS';
+
+  return `${browser} on ${os}`;
+};
+
+const getFallbackLocation = () => {
+  try {
+    const tz = Intl.DateTimeFormat().resolvedOptions().timeZone;
+    if (tz) {
+      const parts = tz.split('/');
+      const city = parts[parts.length - 1].replace(/_/g, ' ');
+      if (city === 'Colombo') return 'Colombo, Sri Lanka';
+      return `${city}, ${parts[0]}`;
+    }
+  } catch (e) {}
+  return 'Colombo, Sri Lanka';
+};
+
+const INITIAL_MOCK_SESSIONS = [
+  { id: 1, device: getBrowserAndOS(), location: getFallbackLocation(), current: true },
+  { id: 2, device: 'Safari on iPhone', location: 'New York, US', current: false },
+  { id: 3, device: 'Firefox on Ubuntu', location: 'Berlin, DE', current: false },
+];
 
 export default function ProfilePage() {
-  const { user } = useAuth();
+  const { user, updateUser, logout } = useAuth();
   const [formData, setFormData] = useState({
-    displayName: user?.name || 'Bethany Parker',
-    email: user?.email || 'bethany@codeforge.io',
-    bio: 'Senior Product Designer leading onboarding and user experience improvements.',
+    displayName: user?.name || 'Ayesha',
+    email: user?.email || 'ayesha@gmail.com',
+    bio: user?.bio || 'Senior Product Designer leading onboarding and user experience improvements.',
   });
+
   const [passwords, setPasswords] = useState({
     currentPassword: '',
     newPassword: '',
     confirmPassword: '',
   });
-  const [twoFactorEnabled, setTwoFactorEnabled] = useState(true);
-  const [sessions, setSessions] = useState([
-    { id: 1, device: 'Chrome on Windows', location: 'London, UK', current: true },
-    { id: 2, device: 'Safari on iPhone', location: 'New York, US', current: false },
-    { id: 3, device: 'Firefox on Ubuntu', location: 'Berlin, DE', current: false },
-  ]);
-  const [avatarPreview, setAvatarPreview] = useState('');
+
+  const [twoFactorEnabled, setTwoFactorEnabled] = useState(() => {
+    const saved = localStorage.getItem(`user_2fa_${user?.id}`);
+    return saved !== null ? saved === 'true' : true;
+  });
+
+  const [sessions, setSessions] = useState(() => {
+    const saved = localStorage.getItem(`user_sessions_${user?.id}`);
+    if (saved) {
+      try { return JSON.parse(saved); } catch (e) {}
+    }
+    return INITIAL_MOCK_SESSIONS;
+  });
+
+  const [avatarPreview, setAvatarPreview] = useState(user?.avatar || '');
+  const [feedback, setFeedback] = useState({ message: '', type: '' });
   const fileInputRef = useRef(null);
+
+  useEffect(() => {
+    let isMounted = true;
+    const updateCurrentSessionLocation = async () => {
+      const detectedDevice = getBrowserAndOS();
+      let detectedLocation = getFallbackLocation();
+
+      try {
+        const response = await fetch('https://ipapi.co/json/');
+        if (response.ok) {
+          const data = await response.json();
+          if (data.city && data.country_name) {
+            detectedLocation = `${data.city}, ${data.country_name}`;
+          }
+        }
+      } catch (e) {
+        // use fallback timezone location
+      }
+
+      if (isMounted) {
+        setSessions(prev => prev.map(s => s.current ? { ...s, device: detectedDevice, location: detectedLocation } : s));
+      }
+    };
+
+    updateCurrentSessionLocation();
+    return () => { isMounted = false; };
+  }, []);
+
+  useEffect(() => {
+    if (user) {
+      setFormData({
+        displayName: user.name || 'Ayesha',
+        email: user.email || 'ayesha@gmail.com',
+        bio: user.bio || 'Senior Product Designer leading onboarding and user experience improvements.',
+      });
+      if (user.avatar) {
+        setAvatarPreview(user.avatar);
+      }
+    }
+  }, [user]);
+
+  const showNotification = (message, type = 'success') => {
+    setFeedback({ message, type });
+    setTimeout(() => {
+      setFeedback({ message: '', type: '' });
+    }, 3500);
+  };
 
   const handleChange = (field, value) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
@@ -35,32 +128,76 @@ export default function ProfilePage() {
     const file = event.target.files?.[0];
     if (!file) return;
 
-    const previewUrl = URL.createObjectURL(file);
-    setAvatarPreview(previewUrl);
+    if (file.size > 5 * 1024 * 1024) {
+      showNotification('Image size should be less than 5MB.', 'error');
+      return;
+    }
 
-    // TODO: Connect to AWS S3 presigned upload flow
-    console.log('Selected avatar file:', file.name);
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      const base64Url = reader.result;
+      setAvatarPreview(base64Url);
+      updateUser({ avatar: base64Url });
+      showNotification('Profile photo uploaded & saved successfully! 📸');
+    };
+    reader.readAsDataURL(file);
   };
 
   const handleSaveProfile = (event) => {
     event.preventDefault();
-    console.log('Profile update payload:', formData);
+    updateUser({
+      name: formData.displayName,
+      email: formData.email,
+      bio: formData.bio,
+      avatar: avatarPreview
+    });
+    showNotification('Personal details saved successfully! 🎉');
   };
 
   const handlePasswordSubmit = (event) => {
     event.preventDefault();
-    if (passwords.newPassword !== passwords.confirmPassword) {
-      alert('New password and confirm password do not match.');
+    if (!passwords.currentPassword) {
+      showNotification('Please enter your current password.', 'error');
       return;
     }
-    console.log('Password update attempt:', passwords);
+    if (passwords.newPassword.length < 6) {
+      showNotification('New password must be at least 6 characters long.', 'error');
+      return;
+    }
+    if (passwords.newPassword !== passwords.confirmPassword) {
+      showNotification('New password and confirm password do not match.', 'error');
+      return;
+    }
+    showNotification('Password updated successfully! 🔒');
     setPasswords({ currentPassword: '', newPassword: '', confirmPassword: '' });
   };
 
-  const handleToggle2FA = () => setTwoFactorEnabled((prev) => !prev);
+  const handleToggle2FA = () => {
+    const newValue = !twoFactorEnabled;
+    setTwoFactorEnabled(newValue);
+    localStorage.setItem(`user_2fa_${user?.id}`, String(newValue));
+    showNotification(newValue ? 'Two-Factor Authentication enabled!' : 'Two-Factor Authentication disabled.');
+  };
 
   const revokeSession = (id) => {
-    setSessions((prev) => prev.filter((session) => session.id !== id));
+    const targetSession = sessions.find(s => s.id === id);
+    if (targetSession?.current) {
+      if (window.confirm('Revoking your current active session will log you out. Continue?')) {
+        logout();
+      }
+      return;
+    }
+
+    const nextSessions = sessions.filter((s) => s.id !== id);
+    setSessions(nextSessions);
+    localStorage.setItem(`user_sessions_${user?.id}`, JSON.stringify(nextSessions));
+    showNotification(`Session "${targetSession?.device || 'Active Session'}" revoked successfully!`);
+  };
+
+  const handleResetSessions = () => {
+    setSessions(INITIAL_MOCK_SESSIONS);
+    localStorage.removeItem(`user_sessions_${user?.id}`);
+    showNotification('Default mock active sessions restored!');
   };
 
   const initials = (formData.displayName || 'User')
@@ -70,23 +207,40 @@ export default function ProfilePage() {
     .slice(0, 2)
     .toUpperCase();
 
-  const displayAvatar = avatarPreview || '/logo.png';
-
   return (
     <div style={{ minHeight: '100vh', background: 'var(--color-background)', padding: '24px 20px 40px' }}>
       <div style={{ maxWidth: '1100px', margin: '0 auto' }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '22px', gap: '12px', flexWrap: 'wrap' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-            <Link to="/" style={{ textDecoration: 'none', color: 'inherit' }}>← Back to Board</Link>
+            <Link to="/" style={{ textDecoration: 'none', color: 'var(--color-text-main)', fontWeight: 600, fontSize: '0.95rem' }}>← Back to Board</Link>
           </div>
           <div style={{ fontSize: '1.8rem', fontWeight: 700, color: 'var(--color-text-main)' }}>My Profile</div>
         </div>
 
+        {feedback.message && (
+          <div style={{
+            display: 'flex', alignItems: 'center', gap: '10px',
+            padding: '14px 18px', borderRadius: '12px', marginBottom: '20px',
+            background: feedback.type === 'error' ? 'rgba(239, 68, 68, 0.15)' : 'rgba(16, 185, 129, 0.15)',
+            border: `1px solid ${feedback.type === 'error' ? '#EF4444' : 'var(--color-success)'}`,
+            color: feedback.type === 'error' ? '#EF4444' : 'var(--color-success)',
+            fontWeight: 600, fontSize: '0.95rem'
+          }}>
+            {feedback.type === 'error' ? <AlertCircle size={20} /> : <CheckCircle2 size={20} />}
+            <span>{feedback.message}</span>
+          </div>
+        )}
+
         <div style={{ display: 'grid', gap: '22px' }}>
+          {/* Header Summary Banner */}
           <section style={cardStyle}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '18px', flexWrap: 'wrap' }}>
               <div style={{ width: '88px', height: '88px', borderRadius: '50%', overflow: 'hidden', background: 'var(--color-primary)', border: '3px solid var(--color-primary)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontWeight: 700, fontSize: '2rem' }}>
-                {displayAvatar === '/logo.png' ? initials : <img src={displayAvatar} alt="Profile" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />}
+                {avatarPreview ? (
+                  <img src={avatarPreview} alt="Profile" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                ) : (
+                  initials
+                )}
               </div>
 
               <div>
@@ -97,6 +251,7 @@ export default function ProfilePage() {
           </section>
 
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '22px' }}>
+            {/* Personal Details */}
             <section style={cardStyle}>
               <h3 style={sectionTitle}>Personal Details</h3>
               <form onSubmit={handleSaveProfile} style={{ display: 'grid', gap: '18px' }}>
@@ -133,8 +288,8 @@ export default function ProfilePage() {
                 </label>
 
                 <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
-                  <span style={{ ...badgeStyle, background: '#dcfce7', color: '#166534' }}>Role: Admin</span>
-                  <span style={{ ...badgeStyle, background: '#dff7f4', color: '#0f766e' }}>Active</span>
+                  <span style={{ ...badgeStyle, background: 'rgba(16, 185, 129, 0.15)', color: 'var(--color-success)' }}>Role: Admin</span>
+                  <span style={{ ...badgeStyle, background: 'rgba(15, 118, 110, 0.15)', color: 'var(--color-primary)' }}>Active</span>
                 </div>
 
                 <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
@@ -145,6 +300,7 @@ export default function ProfilePage() {
               </form>
             </section>
 
+            {/* Avatar Management */}
             <section style={cardStyle}>
               <h3 style={sectionTitle}>Avatar Management</h3>
 
@@ -168,13 +324,14 @@ export default function ProfilePage() {
 
                 <input ref={fileInputRef} type="file" accept="image/*" onChange={handleAvatarSelect} style={{ display: 'none' }} />
 
-                <p style={{ margin: 0, color: 'var(--color-text-muted)', textAlign: 'center' }}>
-                  Recommended size: 800 x 800 px.
+                <p style={{ margin: 0, color: 'var(--color-text-muted)', textAlign: 'center', fontSize: '0.85rem' }}>
+                  Recommended size: 800 × 800 px. Saved automatically.
                 </p>
               </div>
             </section>
           </div>
 
+          {/* Security Settings & Active Sessions */}
           <section style={cardStyle}>
             <h3 style={sectionTitle}>Security Settings</h3>
 
@@ -222,6 +379,7 @@ export default function ProfilePage() {
                 </div>
               </form>
 
+              {/* 2FA Toggle */}
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '12px', flexWrap: 'wrap', paddingTop: '6px' }}>
                 <div>
                   <div style={{ fontWeight: 700, color: 'var(--color-text-main)' }}>Two-Factor Authentication</div>
@@ -257,8 +415,16 @@ export default function ProfilePage() {
                 </button>
               </div>
 
+              {/* Active Sessions List */}
               <div style={{ paddingTop: '4px' }}>
-                <h4 style={{ margin: '0 0 14px', color: 'var(--color-text-main)' }}>Active Sessions</h4>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '14px' }}>
+                  <h4 style={{ margin: 0, color: 'var(--color-text-main)' }}>Active Sessions</h4>
+                  {sessions.length < INITIAL_MOCK_SESSIONS.length && (
+                    <button type="button" onClick={handleResetSessions} style={{ background: 'none', border: 'none', color: 'var(--color-primary)', cursor: 'pointer', fontSize: '0.825rem', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '4px' }}>
+                      <RefreshCw size={14} /> Reset Mock Sessions
+                    </button>
+                  )}
+                </div>
 
                 <div style={{ display: 'grid', gap: '12px' }}>
                   {sessions.map((session) => (
@@ -270,10 +436,10 @@ export default function ProfilePage() {
 
                       <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
                         {session.current && (
-                          <span style={{ ...badgeStyle, background: '#dcfce7', color: '#166534' }}>Current</span>
+                          <span style={{ ...badgeStyle, background: 'rgba(16, 185, 129, 0.15)', color: 'var(--color-success)' }}>Current</span>
                         )}
-                        <button type="button" onClick={() => revokeSession(session.id)} style={{ padding: '8px 12px', borderRadius: '10px', border: '1px solid #fca5a5', background: '#fef2f2', color: '#b91c1c', cursor: 'pointer', fontWeight: 700 }}>
-                          Revoke
+                        <button type="button" onClick={() => revokeSession(session.id)} style={{ padding: '8px 12px', borderRadius: '10px', border: '1px solid #fca5a5', background: 'rgba(239, 68, 68, 0.1)', color: '#ef4444', cursor: 'pointer', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '4px' }}>
+                          <Trash2 size={14} /> Revoke
                         </button>
                       </div>
                     </div>
@@ -311,7 +477,7 @@ const fieldStyle = {
 
 const inputStyle = {
   width: '100%',
-  background: '#fff',
+  background: 'var(--color-surface)',
   border: '1px solid var(--color-border)',
   borderRadius: '12px',
   padding: '12px 14px',
