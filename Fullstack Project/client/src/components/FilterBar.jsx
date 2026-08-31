@@ -2,7 +2,8 @@ import { Search, Filter } from 'lucide-react';
 import { useTasks } from '../hooks/useTasks';
 
 export default function FilterBar({ filters, setFilters }) {
-  const { members, columns } = useTasks();
+  const { boardMembers, members, columns } = useTasks();
+  const assignableMembers = boardMembers && boardMembers.length > 0 ? boardMembers : members;
 
   const handleSearchChange = (e) => {
     setFilters(prev => ({ ...prev, search: e.target.value }));
@@ -44,7 +45,7 @@ export default function FilterBar({ filters, setFilters }) {
             onChange={handleAssigneeChange}
           >
             <option value="">All Assignees</option>
-            {members.map(m => (
+            {assignableMembers.map(m => (
               <option key={m.id} value={m.id}>{m.name}</option>
             ))}
           </select>
