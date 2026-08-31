@@ -1,51 +1,20 @@
 import { useState } from 'react';
+import html2pdf from 'html2pdf.js';
 import { useTasks } from '../hooks/useTasks';
 import Navbar from '../components/Navbar';
 import LoadingState from '../components/LoadingState';
 import ErrorState from '../components/ErrorState';
+import ScheduleReportDialog from '../components/ScheduleReportDialog';
 import { BarChart2, CheckCircle2, Clock, Users, PieChart, TrendingUp, AlertTriangle } from 'lucide-react';
 
 export default function AnalyticsPage() {
   const { tasks, columns, members, status, error, loadInitial } = useTasks();
   const [selectedBoardFilter, setSelectedBoardFilter] = useState('all');
-
-  const downloadTextFile = (filename, content, type) => {
-    const blob = new Blob([content], { type });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement('a');
-    link.href = url;
-    link.download = filename;
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    URL.revokeObjectURL(url);
-  };
-
-  const handleDownloadPdf = () => {
-    const docTitle = 'SyncBoard_Analytics_Report';
-    const pdfContent = `%PDF-1.4\n1 0 obj<< /Type /Catalog /Pages 2 0 R >>endobj\n2 0 obj<< /Type /Pages /Kids [3 0 R] /Count 1 >>endobj\n3 0 obj<< /Type /Page /Parent 2 0 R /MediaBox [0 0 300 144] /Contents 4 0 R /Resources << /Font << /F1 5 0 R >> >> >>endobj\n4 0 obj<< /Length 76 >>stream\nBT /F1 18 Tf 50 100 Td (SyncBoard Analytics Report) Tj ET\nendstream\nendobj\n5 0 obj<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>endobj\nxref\n0 6\n0000000000 65535 f \n0000000010 00000 n \n0000000063 00000 n \n0000000129 00000 n \n0000000435 00000 n \n0000000596 00000 n \ntrailer\n<< /Root 1 0 R /Size 6 >>\nstartxref\n681\n%%EOF`;
-    downloadTextFile(`${docTitle}.pdf`, pdfContent, 'application/pdf');
-  };
-
-  const handleDownloadCsv = () => {
-    const csvRows = [
-      ['Task Status', 'Count'],
-      ...statusCounts.map(col => [col.name, col.count]),
-      ['Total Tasks', totalTasks],
-      ['Completion Rate', `${completionRate}%`],
-      ['Overdue Tasks', overdueCount],
-    ];
-
-    const csvContent = csvRows.map(row => row.join(',')).join('\n');
-    downloadTextFile('syncboard_analytics.csv', csvContent, 'text/csv;charset=utf-8;');
-  };
-
-  const handleConfigureSchedule = () => {
-    alert('Scheduled reporting is ready to be connected to your backend email delivery flow.');
-  };
+  const [showScheduleModal, setShowScheduleModal] = useState(false);
 
   if (status === 'loading' || status === 'idle') return <LoadingState />;
   if (status === 'error') return <ErrorState message={error} onRetry={loadInitial} />;
+
 
   // Filter tasks if needed
   const totalTasks = tasks.length;
@@ -83,6 +52,161 @@ export default function AnalyticsPage() {
     const rate = memberTasks.length > 0 ? Math.round((memberCompleted / memberTasks.length) * 100) : 0;
     return { member: m, total: memberTasks.length, completed: memberCompleted, rate };
   });
+
+  const downloadTextFile = (filename, content, type) => {
+    const blob = new Blob([content], { type });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = filename;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+  };
+
+  const handleDownloadPdf = () => {
+    const printDate = new Date().toLocaleString();
+
+    const element = document.createElement('div');
+    element.style.padding = '24px';
+    element.style.background = '#ffffff';
+    element.style.color = '#1E293B';
+    element.style.fontFamily = "'Segoe UI', Roboto, Helvetica, Arial, sans-serif";
+
+    element.innerHTML = `
+      <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 3px solid #0F766E; padding-bottom: 12px; margin-bottom: 20px;">
+        <div>
+          <h1 style="color: #0F766E; margin: 0; font-size: 20px; font-weight: 700;">SyncBoard Analytics & Workspace Report</h1>
+          <p style="margin: 4px 0 0; color: #64748B; font-size: 12px;">Comprehensive Sprint Velocity & Team Workload Report</p>
+        </div>
+        <div style="font-size: 11px; color: #64748B; text-align: right;">
+          <p style="margin:0;"><strong>Date:</strong> ${printDate}</p>
+          <p style="margin:3px 0 0;"><strong>Status:</strong> Active Workspace</p>
+        </div>
+      </div>
+
+      <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 20px;">
+        <div style="background: #F8FAFC; border: 1px solid #E2E8F0; padding: 12px; border-radius: 6px; text-align: center;">
+          <div style="font-size: 10px; color: #64748B; text-transform: uppercase; font-weight: 700;">Total Tasks</div>
+          <div style="font-size: 18px; font-weight: 700; color: #0F766E; margin-top: 4px;">${totalTasks}</div>
+        </div>
+        <div style="background: #F8FAFC; border: 1px solid #E2E8F0; padding: 12px; border-radius: 6px; text-align: center;">
+          <div style="font-size: 10px; color: #64748B; text-transform: uppercase; font-weight: 700;">Completion Rate</div>
+          <div style="font-size: 18px; font-weight: 700; color: #0F766E; margin-top: 4px;">${completionRate}%</div>
+        </div>
+        <div style="background: #F8FAFC; border: 1px solid #E2E8F0; padding: 12px; border-radius: 6px; text-align: center;">
+          <div style="font-size: 10px; color: #64748B; text-transform: uppercase; font-weight: 700;">Overdue Tasks</div>
+          <div style="font-size: 18px; font-weight: 700; color: ${overdueCount > 0 ? '#EF4444' : '#0F766E'}; margin-top: 4px;">${overdueCount}</div>
+        </div>
+        <div style="background: #F8FAFC; border: 1px solid #E2E8F0; padding: 12px; border-radius: 6px; text-align: center;">
+          <div style="font-size: 10px; color: #64748B; text-transform: uppercase; font-weight: 700;">Contributors</div>
+          <div style="font-size: 18px; font-weight: 700; color: #0F766E; margin-top: 4px;">${members.length}</div>
+        </div>
+      </div>
+
+      <div style="font-size: 14px; font-weight: 700; color: #0F766E; border-bottom: 2px solid #E2E8F0; padding-bottom: 4px; margin-top: 18px; margin-bottom: 10px;">1. Column Status Distribution</div>
+      <table style="width: 100%; border-collapse: collapse; margin-top: 6px; font-size: 12px;">
+        <thead>
+          <tr style="background: #0F766E; color: #ffffff;">
+            <th style="padding: 8px 10px; text-align: left;">Column Status</th>
+            <th style="padding: 8px 10px; text-align: left;">Task Count</th>
+            <th style="padding: 8px 10px; text-align: left;">Percentage Share</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${statusCounts.map((col, idx) => `
+            <tr style="background: ${idx % 2 === 0 ? '#ffffff' : '#F8FAFC'}; border-bottom: 1px solid #E2E8F0;">
+              <td style="padding: 8px 10px;"><strong>${col.name}</strong></td>
+              <td style="padding: 8px 10px;">${col.count} tasks</td>
+              <td style="padding: 8px 10px;">${col.percentage}%</td>
+            </tr>
+          `).join('')}
+        </tbody>
+      </table>
+
+      <div style="font-size: 14px; font-weight: 700; color: #0F766E; border-bottom: 2px solid #E2E8F0; padding-bottom: 4px; margin-top: 18px; margin-bottom: 10px;">2. Team Member Workload Summary</div>
+      <table style="width: 100%; border-collapse: collapse; margin-top: 6px; font-size: 12px;">
+        <thead>
+          <tr style="background: #0F766E; color: #ffffff;">
+            <th style="padding: 8px 10px; text-align: left;">Member Name</th>
+            <th style="padding: 8px 10px; text-align: left;">Role</th>
+            <th style="padding: 8px 10px; text-align: left;">Assigned</th>
+            <th style="padding: 8px 10px; text-align: left;">Completed</th>
+            <th style="padding: 8px 10px; text-align: left;">Completion Rate</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${memberWorkload.map(({ member, total, completed, rate }, idx) => `
+            <tr style="background: ${idx % 2 === 0 ? '#ffffff' : '#F8FAFC'}; border-bottom: 1px solid #E2E8F0;">
+              <td style="padding: 8px 10px;"><strong>${member.name}</strong></td>
+              <td style="padding: 8px 10px;">${member.role || 'Team Member'}</td>
+              <td style="padding: 8px 10px;">${total}</td>
+              <td style="padding: 8px 10px;">${completed}</td>
+              <td style="padding: 8px 10px;">${rate}%</td>
+            </tr>
+          `).join('')}
+        </tbody>
+      </table>
+
+      <div style="font-size: 14px; font-weight: 700; color: #0F766E; border-bottom: 2px solid #E2E8F0; padding-bottom: 4px; margin-top: 18px; margin-bottom: 10px;">3. Detailed Task Inventory</div>
+      <table style="width: 100%; border-collapse: collapse; margin-top: 6px; font-size: 12px;">
+        <thead>
+          <tr style="background: #0F766E; color: #ffffff;">
+            <th style="padding: 8px 10px; text-align: left;">Task Title</th>
+            <th style="padding: 8px 10px; text-align: left;">Status Column</th>
+            <th style="padding: 8px 10px; text-align: left;">Assignees</th>
+            <th style="padding: 8px 10px; text-align: left;">Due Date</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${tasks.map((t, idx) => {
+            const col = columns.find(c => c.id === t.columnId);
+            const assigneeNames = (t.assigneeIds || []).map(id => {
+              const m = members.find(mem => mem.id === id);
+              return m ? m.name : id;
+            }).join(', ') || 'Unassigned';
+            return `
+              <tr style="background: ${idx % 2 === 0 ? '#ffffff' : '#F8FAFC'}; border-bottom: 1px solid #E2E8F0;">
+                <td style="padding: 8px 10px;"><strong>${t.title}</strong></td>
+                <td style="padding: 8px 10px;">${col ? col.name : 'N/A'}</td>
+                <td style="padding: 8px 10px;">${assigneeNames}</td>
+                <td style="padding: 8px 10px;">${t.dueDate || 'No due date'}</td>
+              </tr>
+            `;
+          }).join('')}
+        </tbody>
+      </table>
+    `;
+
+    const opt = {
+      margin:       0.3,
+      filename:     'SyncBoard_Analytics_Report.pdf',
+      image:        { type: 'jpeg', quality: 0.98 },
+      html2canvas:  { scale: 2, useCORS: true, logging: false },
+      jsPDF:        { unit: 'in', format: 'letter', orientation: 'portrait' }
+    };
+
+    html2pdf().set(opt).from(element).save();
+  };
+
+
+  const handleDownloadCsv = () => {
+    const csvRows = [
+      ['Task Status', 'Count'],
+      ...statusCounts.map(col => [col.name, col.count]),
+      ['Total Tasks', totalTasks],
+      ['Completion Rate', `${completionRate}%`],
+      ['Overdue Tasks', overdueCount],
+    ];
+
+    const csvContent = csvRows.map(row => row.join(',')).join('\n');
+    downloadTextFile('syncboard_analytics.csv', csvContent, 'text/csv;charset=utf-8;');
+  };
+
+  const handleConfigureSchedule = () => {
+    setShowScheduleModal(true);
+  };
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh', padding: '24px', backgroundColor: 'var(--color-background)' }}>
@@ -260,6 +384,11 @@ export default function AnalyticsPage() {
           </div>
         </div>
       </div>
+
+      {showScheduleModal && (
+        <ScheduleReportDialog onClose={() => setShowScheduleModal(false)} />
+      )}
     </div>
   );
 }
+
