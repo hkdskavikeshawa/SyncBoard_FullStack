@@ -6,7 +6,7 @@ const NotificationContext = createContext(null);
 
 export function NotificationProvider({ children }) {
   const [notifications, setNotifications] = useState([]);
-  const bellRef = useRef(null); // exposed so Navbar can trigger ring animation
+  const bellRef = useRef(null);
   const { user } = useAuth();
 
   const triggerBellRing = () => {
@@ -25,23 +25,20 @@ export function NotificationProvider({ children }) {
     }
     try {
       const data = await notifApi.getNotifications();
-      setNotifications(data || []);
+      setNotifications(Array.isArray(data) ? data : []);
     } catch (err) {
       console.error('Error fetching user notifications:', err);
     }
   }, [user]);
 
-  // Load user notifications when user changes
   useEffect(() => {
     fetchUserNotifications();
   }, [fetchUserNotifications]);
 
-  // Listen for real-time SYNC/NOTIFY broadcast triggers from other tabs
   useEffect(() => {
     const channel = new BroadcastChannel('collab_board_sync');
     channel.onmessage = (e) => {
-      if (e.data.type === 'NOTIFY' || e.data.type === 'SYNC') {
-        // Refetch user's notifications from backend when an action occurs
+      if (e.data?.type === 'NOTIFY' || e.data?.type === 'SYNC') {
         fetchUserNotifications().then(() => triggerBellRing());
       }
     };

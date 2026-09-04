@@ -30,6 +30,8 @@ async function handleResponse(response) {
   return data;
 }
 
+/* ---------------- Tasks ---------------- */
+
 export async function getTasks(boardId) {
   const response = await fetch(`${API_BASE_URL}/tasks?boardId=${boardId}`, {
     headers: getHeaders(),
@@ -70,6 +72,8 @@ export async function deleteTask(id) {
   return handleResponse(response);
 }
 
+/* ---------------- Columns ---------------- */
+
 export async function getColumns(boardId) {
   const response = await fetch(`${API_BASE_URL}/columns?boardId=${boardId}`, {
     headers: getHeaders(),
@@ -103,18 +107,11 @@ export async function deleteColumn(id) {
   return handleResponse(response);
 }
 
+/* ---------------- Boards ---------------- */
+
 export async function getBoards() {
   const response = await fetch(`${API_BASE_URL}/boards`, {
     headers: getHeaders(),
-  });
-  return handleResponse(response);
-}
-
-export async function inviteUserByEmail(boardId, email) {
-  const response = await fetch(`${API_BASE_URL}/boards/${boardId}/invite`, {
-    method: 'POST',
-    headers: getHeaders(),
-    body: JSON.stringify({ email }),
   });
   return handleResponse(response);
 }
@@ -145,12 +142,25 @@ export async function deleteBoard(id) {
   return handleResponse(response);
 }
 
+export async function inviteUserByEmail(boardId, email) {
+  const response = await fetch(`${API_BASE_URL}/boards/${boardId}/invite`, {
+    method: 'POST',
+    headers: getHeaders(),
+    body: JSON.stringify({ email }),
+  });
+  return handleResponse(response);
+}
+
+/* ---------------- Members ---------------- */
+
 export async function getMembers() {
   const response = await fetch(`${API_BASE_URL}/members`, {
     headers: getHeaders(),
   });
   return handleResponse(response);
 }
+
+/* ---------------- Comments ---------------- */
 
 export async function getComments(taskId) {
   const response = await fetch(`${API_BASE_URL}/tasks/${taskId}/comments`, {
@@ -167,3 +177,4 @@ export async function addComment(taskId, { text, authorId, authorName }) {
   });
   return handleResponse(response);
 }
+
