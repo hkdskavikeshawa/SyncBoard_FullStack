@@ -8,8 +8,12 @@ import taskRoutes from './routes/taskRoutes.js';
 import memberRoutes from './routes/memberRoutes.js';
 import notificationRoutes from './routes/notificationRoutes.js';
 import { errorHandler } from './middleware/errorHandler.js';
+import connectDB from './config/db.js';
 
 dotenv.config();
+
+// Connect to MongoDB
+connectDB();
 
 const app = express();
 const PORT = process.env.PORT || 5000;

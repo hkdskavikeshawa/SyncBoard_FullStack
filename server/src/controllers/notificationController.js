@@ -1,72 +1,88 @@
-import { store } from '../data/store.js';
-import { cryptoRandomUUID } from '../utils/idGenerator.js';
+import Notification from '../models/Notification.js';
+import Board from '../models/Board.js';
 
-export const createNotification = ({ userId, message, actor = 'System' }) => {
-  if (!userId || !message) return null;
-  const notif = {
-    id: cryptoRandomUUID(),
-    userId,
-    message,
-    actor,
-    timestamp: new Date().toISOString(),
-    read: false
-  };
-  store.notifications = store.notifications || [];
-  store.notifications.unshift(notif);
-  // Keep last 100 notifications total
-  if (store.notifications.length > 100) {
-    store.notifications = store.notifications.slice(0, 100);
+export const getUserNotifications = async (req, res, next) => {
+  try {
+    const userId = req.user.id;
+    const notifications = await Notification.find({ userId }).sort({ createdAt: -1 });
+    res.json(notifications);
+  } catch (error) {
+    next(error);
   }
-  return notif;
 };
 
-export const notifyBoardMembers = ({ boardId, actorId, actorName = 'A teammate', actionMessage, excludeUserIds = [] }) => {
-  if (!boardId || !actionMessage) return;
-
-  const board = store.boards.find(b => b.id === boardId);
-  if (!board) return;
-
-  // Strictly notify ONLY actual members/participants of this specific board (owner + invited members)
-  const memberSet = new Set([board.ownerId, ...(board.invitedMembers || [])]);
-
-  memberSet.forEach(userId => {
-    if (!userId || excludeUserIds.includes(userId)) return;
-
-    const isActor = userId === actorId;
-    const finalMessage = isActor 
-      ? `You ${actionMessage}` 
-      : `${actorName} ${actionMessage}`;
-
-    createNotification({
-      userId,
-      message: finalMessage,
-      actor: isActor ? 'You' : actorName
-    });
-  });
-};
-
-export const getUserNotifications = (req, res) => {
-  const userId = req.user.id;
-  store.notifications = store.notifications || [];
-  const userNotifs = store.notifications.filter(n => n.userId === userId);
-  res.json(userNotifs);
-};
-
-export const markNotificationsRead = (req, res) => {
-  const userId = req.user.id;
-  store.notifications = store.notifications || [];
-  store.notifications = store.notifications.map(n => {
-    if (n.userId === userId) {
-      return { ...n, read: true };
+export const markNotificationRead = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    const notification = await Notification.findById(id);
+    
+    if (notification) {
+      notification.read = true;
+      await notification.save();
+      res.json(notification);
+    } else {
+      res.status(404).json({ message: 'Notification not found' });
     }
-    return n;
-  });
-  res.json({ message: 'All notifications marked as read' });
+  } catch (error) {
+    next(error);
+  }
 };
 
-export const clearUserNotifications = (req, res) => {
-  const userId = req.user.id;
-  store.notifications = store.notifications || [];
-  store.notifications = store.notifications.filter(n => n.userId !== userId);
-  res.json({ message: 'All notifications cleared' });
+export const createNotification = async ({ userId, message, actor }) => {
+  try {
+    await Notification.create({
+      userId,
+      message,
+      type: 'info'
+    });
+  } catch (error) {
+    console.error('Error creating notification', error);
+  }
+};
+
+export const notifyBoardMembers = async ({ boardId, actorId, actorName, actionMessage, excludeUserIds = [] }) => {
+  try {
+    const board = await Board.findById(boardId);
+    if (!board) return;
+
+    const membersToNotify = new Set([board.ownerId.toString(), ...board.invitedMembers.map(id => id.toString())]);
+
+    // Don't notify the person who did the action
+    if (actorId) membersToNotify.delete(actorId.toString());
+
+    // Don't notify specifically excluded users
+    excludeUserIds.forEach(id => membersToNotify.delete(id.toString()));
+
+    const notificationsToCreate = Array.from(membersToNotify).map(userId => ({
+      userId,
+      message: `${actorName || 'Someone'} ${actionMessage}`,
+      type: 'info'
+    }));
+
+    if (notificationsToCreate.length > 0) {
+      await Notification.insertMany(notificationsToCreate);
+    }
+  } catch (error) {
+    console.error('Error in notifyBoardMembers:', error);
+  }
+};
+
+export const clearUserNotifications = async (req, res, next) => {
+  try {
+    const userId = req.user.id;
+    await Notification.deleteMany({ userId });
+    res.json({ message: 'Notifications cleared' });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const markNotificationsRead = async (req, res, next) => {
+  try {
+    const userId = req.user.id;
+    await Notification.updateMany({ userId, read: false }, { read: true });
+    res.json({ message: 'Notifications marked as read' });
+  } catch (error) {
+    next(error);
+  }
 };

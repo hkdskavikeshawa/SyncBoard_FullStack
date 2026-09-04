@@ -1,7 +1,10 @@
-import { store } from '../data/store.js';
+import User from '../models/User.js';
 
-export const getMembers = (req, res) => {
-  const membersList = store.users.map(u => ({ id: u.id, name: u.name, email: u.email }));
-  res.json(membersList);
+export const getMembers = async (req, res, next) => {
+  try {
+    const users = await User.find({}).select('-password');
+    res.json(users);
+  } catch (error) {
+    next(error);
+  }
 };
-
