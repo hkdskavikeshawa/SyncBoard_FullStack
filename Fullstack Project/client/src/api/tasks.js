@@ -1,19 +1,4 @@
-import { seedTasks, columns as seedColumns, boards as seedBoards, members } from '../data/mockData';
-import { getUserByEmail } from './auth';
-
 const API_BASE_URL = 'http://localhost:5000/api';
-const DELAY = 600;
-let FAIL_NEXT = false;
-
-const sleep = (ms) => new Promise((res) => setTimeout(res, ms));
-const clone = (v) => JSON.parse(JSON.stringify(v));
-
-let db = clone(seedTasks);
-let cols = clone(seedColumns);
-let brds = clone(seedBoards);
-=======
-const API_BASE_URL = 'http://localhost:5000/api';
->>>>>>> a9a83607c60ef5d21d38df9b71223bc1e35683d2
 
 export class NotFoundError extends Error {}
 
@@ -165,23 +150,6 @@ export async function getMembers() {
     headers: getHeaders(),
   });
   return handleResponse(response);
-}
-
-export async function getComments(taskId) {
-  const response = await fetch(`${API_BASE_URL}/tasks/${taskId}/comments`, {
-    headers: getHeaders(),
-  });
-  return handleResponse(response);
-}
-
-export async function addComment(taskId, { text, authorId, authorName }) {
-  const response = await fetch(`${API_BASE_URL}/tasks/${taskId}/comments`, {
-    method: 'POST',
-    headers: getHeaders(),
-    body: JSON.stringify({ text, authorId, authorName }),
-  });
-  return handleResponse(response);
-}
 }
 
 export async function getComments(taskId) {
